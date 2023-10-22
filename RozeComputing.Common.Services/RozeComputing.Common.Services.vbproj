@@ -14,6 +14,9 @@ Just send the data through the functions and get returned the value cleaned or t
     <PackageReleaseNotes>Created the package</PackageReleaseNotes>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(VersionPrefix)</FileVersion>
+    <PackageProjectUrl>https://github.com/users/Hydroplane72/projects/1/views/2</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Hydroplane72/RozeComputing.Common</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -23,6 +26,13 @@ Just send the data through the functions and get returned the value cleaned or t
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RoseComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
