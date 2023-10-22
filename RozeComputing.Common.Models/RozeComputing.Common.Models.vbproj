@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>RozeComputing.Common.Models</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Rose Computing Common Models</Title>
+    <Authors>Roze Computing, Matthew Rozendaal</Authors>
+    <Description>Models used by and shared by Roze Computing Services</Description>
+    <Copyright>@2023 - Matthew Rozendaal</Copyright>
+    <PackageProjectUrl>https://github.com/users/Hydroplane72/projects/1/views/2</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Hydroplane72/RozeComputing.Common</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>models</PackageTags>
+    <PackageReleaseNotes>Created the package</PackageReleaseNotes>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <FileVersion>$(VersionPrefix)</FileVersion>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <AnalysisLevel>6.0</AnalysisLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

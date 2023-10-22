@@ -41,7 +41,7 @@ Just send the data through the functions and get returned the value cleaned or t
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RoseComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
+    <ProjectReference Include="..\RozeComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿Imports RoseComputing.Common.Models
+﻿Imports RozeComputing.Common.Models
 
 ''' <summary>
 ''' Allows for the passing in of values and will return a string. <br />
