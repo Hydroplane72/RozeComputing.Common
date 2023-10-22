@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33424.131
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RozeComputing.Common.Models", "RoseComputing.Common.Models\RozeComputing.Common.Models.vbproj", "{C10CB207-F5A4-4C16-858D-2CBDF92B4A82}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RozeComputing.Common.Services", "RozeComputing.Common.Services\RozeComputing.Common.Services.vbproj", "{428E6C11-FE3F-4427-8346-D1D9B31F12DF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C10CB207-F5A4-4C16-858D-2CBDF92B4A82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C10CB207-F5A4-4C16-858D-2CBDF92B4A82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C10CB207-F5A4-4C16-858D-2CBDF92B4A82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C10CB207-F5A4-4C16-858D-2CBDF92B4A82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{428E6C11-FE3F-4427-8346-D1D9B31F12DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{428E6C11-FE3F-4427-8346-D1D9B31F12DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{428E6C11-FE3F-4427-8346-D1D9B31F12DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{428E6C11-FE3F-4427-8346-D1D9B31F12DF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5D5FCDC0-917F-4CFA-A97C-809E720E53EE}
+	EndGlobalSection
+EndGlobal
