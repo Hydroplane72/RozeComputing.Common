@@ -1,0 +1,15 @@
+ <Project>
+    <PropertyGroup>
+        <Version>1.1.1-alpha</Version>
+        <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+        <FileVersion>$(VersionPrefix)</FileVersion>
+        <RepositoryUrl>https://github.com/Hydroplane72/RozeComputing.Common</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/users/Hydroplane72/projects/1/views/2</PackageProjectUrl>
+        <Copyright>@2023 - Matthew Rozendaal</Copyright>
+        <InformationalVersion>This is a prerelease package</InformationalVersion>
+        <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+      <RepositoryType>git</RepositoryType>
+    </PropertyGroup>
+  </Project>
