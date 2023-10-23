@@ -4,7 +4,7 @@ Imports RozeComputing.Common.Models.Cleaning
 ''' <summary>
 ''' Allows for the passing in of values and will clean/convert the Value or return the default if not convertible. <br />
 ''' </summary>
-Public Class SimpleCleaning
+Public Class SimpleCleaningService
     Implements IRozeCompliance
 
 #Region "Variables"
