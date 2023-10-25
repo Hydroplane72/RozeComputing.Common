@@ -24,15 +24,21 @@ Public Class SimpleCleaningService
 
 #Region "Constructor"
     ''' <summary>
-    ''' Creates the string cleaning object
+    ''' Creates the cleaning object.
     ''' </summary>
-    ''' <param name="pCleaningSettings">Pass in any settings you wish to change from the default</param>
-    Sub New(Optional pCleaningSettings As CleaningSettings = Nothing)
+    ''' <param name="pCleaningSettings">Pass in any settings you wish to change from the default of <see cref="CleaningSettings"/></param>
+    Sub New(pCleaningSettings As CleaningSettings)
         If IsNothing(pCleaningSettings) Then
             pCleaningSettings = New CleaningSettings
         End If
 
         mCleaningSettings = pCleaningSettings
+    End Sub
+    ''' <summary>
+    ''' Creates the cleaning object with default <see cref="CleaningSettings"/>
+    ''' </summary>
+    Sub New()
+        mCleaningSettings = New CleaningSettings
     End Sub
 
 #End Region
@@ -117,7 +123,7 @@ Public Class SimpleCleaningService
             If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
                 Return GetCleanString(pValue, Nothing, pTrimLeftOfValue, pTrimRightOfValue, pLengthLimit, mCleaningSettings.AllowExceptionRollUp)
             Else
-                Return String.Empty
+                Return GetCleanString(pValue, String.Empty, pTrimLeftOfValue, pTrimRightOfValue, pLengthLimit, mCleaningSettings.AllowExceptionRollUp)
             End If
 
         Catch ex As Exception
