@@ -55,11 +55,11 @@ Public Class DataRowService
 #End Region
 
     ''' <summary>
-    ''' Returns a data row that has been marked as new for the datatable
+    ''' Returns a <see cref="DataRow"/> that has been marked as new for the <see cref="DataTable"/>
     ''' </summary>
     ''' <param name="pDataTable"></param>
     ''' <returns>New <see cref="DataRow"/></returns>
-    Public Function GetNewDataRowFromDataTable(pDataTable As DataTable) As DataRow
+    Public Shared Function GetNewDataRowFromDataTable(pDataTable As DataTable) As DataRow
         Return pDataTable.NewRow
     End Function
 
@@ -102,13 +102,15 @@ Public Class DataRowService
 
             'Validate Parameters
             If IsNothing(pDataRow) Then
-                Throw New ArgumentNullException("pDataRow", "The parameter pDataRow is nothing")
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
             End If
+
             If IsNothing(pColumnName) Then
-                Throw New ArgumentNullException("pColumnName", "The parameter pDataRow is nothing")
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
             End If
+
             If pDataRow.Table.Columns.Contains(pColumnName) = False Then
-                Throw New ArgumentOutOfRangeException("pColumnName", pColumnName, "Column does not exist within Parameter (pDataRow)")
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
             End If
 
             rtnValue = mCleaningService.GetCleanString(pDataRow.Item(pColumnName), pDefaultValue, pTrimLeftOfValue, pTrimRightOfValue, pLengthLimit, pAllowExceptionRollUp)
@@ -160,31 +162,33 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Double"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Double"/>.<br />
+    ''' Does call <see cref="GetDoubleFromDataRow(DataRow, String, Double, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Double"/></param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
     ''' <returns>A clean valid <see cref="Double"/> that can be used without fear of nulls</returns>
-    Public Function GetDoubleFromDataRow(pDataRow As DataRow, pColumnName As String) As Double
+    Public Function GetDoubleFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Double
         Dim rtnValue As Double = 0
 
         Try
             Select Case mCleaningSettings.DefaultValue
                 Case CleaningSettings.DefaultValueEnum.UseMaxVal
                     rtnValue = Double.MaxValue
-                    rtnValue = GetDouble(pValue, Double.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetDoubleFromDataRow(pDataRow, pColumnName, Double.MaxValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
                     rtnValue = 0
-                    rtnValue = GetDouble(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetDoubleFromDataRow(pDataRow, pColumnName, 0, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseMinVal
                     rtnValue = Double.MinValue
-                    rtnValue = GetDouble(pValue, Double.MinValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetDoubleFromDataRow(pDataRow, pColumnName, Double.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetDouble(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetDoubleFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
             End Select
         Catch ex As Exception
@@ -198,27 +202,53 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Double"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Double"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanDouble(Object, Double, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Double"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Double"/>.</param>
-    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to roll out.<br />If = false will catch any errors and not cause issues in your system.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
     ''' <returns>A clean valid <see cref="Double"/> that can be used without fear of nulls</returns>
     Public Function GetDoubleFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Double, pAllowExceptionRollUp As Boolean) As Double
         Dim rtnValue As Double = 0
 
         Try
-            Dim pValueCleaned = GetString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
-
-            'Try converting to Double
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Double.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanDouble(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
+
 
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -232,31 +262,33 @@ Public Class DataRowService
 
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Integer"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Integer"/>.<br />
+    ''' Does call <see cref="GetIntegerFromDataRow(DataRow, String, Integer, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Integer"/></param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
     ''' <returns>A clean valid <see cref="Integer"/> that can be used without fear of nulls</returns>
-    Public Function GetIntegerFromDataRow(pDataRow As DataRow, pColumnName As String) As Integer
+    Public Function GetIntegerFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Integer
         Dim rtnValue As Integer = 0
 
         Try
             Select Case mCleaningSettings.DefaultValue
                 Case CleaningSettings.DefaultValueEnum.UseMaxVal
                     rtnValue = Integer.MaxValue
-                    rtnValue = GetInteger(pValue, Integer.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetIntegerFromDataRow(pDataRow, pColumnName, Integer.MaxValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
                     rtnValue = 0
-                    rtnValue = GetInteger(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetIntegerFromDataRow(pDataRow, pColumnName, 0, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseMinVal
                     rtnValue = Integer.MinValue
-                    rtnValue = GetInteger(pValue, Integer.MinValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetIntegerFromDataRow(pDataRow, pColumnName, Integer.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetInteger(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetIntegerFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
             End Select
         Catch ex As Exception
@@ -270,27 +302,52 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Integer"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Integer"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanInteger(Object, Integer, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Integer"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Integer"/>.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
     ''' <returns>A clean valid <see cref="Integer"/> that can be used without fear of nulls</returns>
-    Public Function GetIntegerFromDataRow(pDataRow As DataRow, pColumnName As String, Optional pDefaultValue As Integer = Integer.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Integer
+    Public Function GetIntegerFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Integer, pAllowExceptionRollUp As Boolean) As Integer
         Dim rtnValue As Integer = 0
 
         Try
-            Dim pValueCleaned = GetString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
-
-            'Try converting to integer
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Integer.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanInteger(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
 
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -302,32 +359,35 @@ Public Class DataRowService
         Return rtnValue
     End Function
 
+
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Long"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Long"/>.<br />
+    ''' Does call <see cref="GetLongFromDataRow(DataRow, String, Long, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Long"/></param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
     ''' <returns>A clean valid <see cref="Long"/> that can be used without fear of nulls</returns>
-    Public Function GetLongFromDataRow(pDataRow As DataRow, pColumnName As String) As Long
+    Public Function GetLongFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Long
         Dim rtnValue As Long = 0
 
         Try
             Select Case mCleaningSettings.DefaultValue
                 Case CleaningSettings.DefaultValueEnum.UseMaxVal
                     rtnValue = Long.MaxValue
-                    rtnValue = GetLong(pValue, Long.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetLongFromDataRow(pDataRow, pColumnName, Long.MaxValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
                     rtnValue = 0
-                    rtnValue = GetLong(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetLongFromDataRow(pDataRow, pColumnName, 0, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseMinVal
                     rtnValue = Long.MinValue
-                    rtnValue = GetLong(pValue, Long.MinValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetLongFromDataRow(pDataRow, pColumnName, Long.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetLong(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetLongFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
             End Select
         Catch ex As Exception
@@ -341,28 +401,52 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Long"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Long"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanLong(Object, Long, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Long"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Long"/>.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
     ''' <returns>A clean valid <see cref="Long"/> that can be used without fear of nulls</returns>
-    Public Function GetLongFromDataRow(pDataRow As DataRow, pColumnName As String, Optional pDefaultValue As Long = Long.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Long
+    Public Function GetLongFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Long, pAllowExceptionRollUp As Boolean) As Long
         Dim rtnValue As Long = 0
 
         Try
-            Dim pValueCleaned = GetString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
-
-
-            'Try converting to Long
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Long.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanLong(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
 
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -374,32 +458,35 @@ Public Class DataRowService
         Return rtnValue
     End Function
 
+
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int16"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Int16"/>.<br />
+    ''' Does call <see cref="GetInt16FromDataRow(DataRow, String, Int16, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int16"/></param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
     ''' <returns>A clean valid <see cref="Int16"/> that can be used without fear of nulls</returns>
-    Public Function GetInt16FromDataRow(pDataRow As DataRow, pColumnName As String) As Int16
+    Public Function GetInt16FromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Int16
         Dim rtnValue As Int16 = 0
 
         Try
             Select Case mCleaningSettings.DefaultValue
                 Case CleaningSettings.DefaultValueEnum.UseMaxVal
                     rtnValue = Int16.MaxValue
-                    rtnValue = GetInt16(pValue, Int16.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt16FromDataRow(pDataRow, pColumnName, Int16.MaxValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
                     rtnValue = 0
-                    rtnValue = GetInt16(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt16FromDataRow(pDataRow, pColumnName, 0, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseMinVal
                     rtnValue = Int16.MinValue
-                    rtnValue = GetInt16(pValue, Int16.MinValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt16FromDataRow(pDataRow, pColumnName, Int16.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetInt16(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt16FromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
             End Select
         Catch ex As Exception
@@ -413,27 +500,52 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int16"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Int16"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanInt16(Object, Int16, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int16"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Int16"/>.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
     ''' <returns>A clean valid <see cref="Int16"/> that can be used without fear of nulls</returns>
-    Public Function GetInt16FromDataRow(pDataRow As DataRow, pColumnName As String, Optional pDefaultValue As Int16 = Int16.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Int16
+    Public Function GetInt16FromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Int16, pAllowExceptionRollUp As Boolean) As Int16
         Dim rtnValue As Int16 = 0
 
         Try
-            Dim pValueCleaned = GetString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
-
-            'Try converting to Int16
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Int16.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanInt16(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
 
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -445,32 +557,35 @@ Public Class DataRowService
         Return rtnValue
     End Function
 
+
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int16"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Int32"/>.<br />
+    ''' Does call <see cref="GetInt32FromDataRow(DataRow, String, Int32, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int16"/></param>
-    ''' <returns>A clean valid <see cref="Int16"/> that can be used without fear of nulls</returns>
-    Public Function GetInt32FromDataRow(pDataRow As DataRow, pColumnName As String) As Int32
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <returns>A clean valid <see cref="Int32"/> that can be used without fear of nulls</returns>
+    Public Function GetInt32FromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Int32
         Dim rtnValue As Int32 = 0
 
         Try
             Select Case mCleaningSettings.DefaultValue
                 Case CleaningSettings.DefaultValueEnum.UseMaxVal
                     rtnValue = Int32.MaxValue
-                    rtnValue = GetInt32(pValue, Int32.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt32FromDataRow(pDataRow, pColumnName, Int32.MaxValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
                     rtnValue = 0
-                    rtnValue = GetInt32(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt32FromDataRow(pDataRow, pColumnName, 0, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseMinVal
                     rtnValue = Int32.MinValue
-                    rtnValue = GetInt32(pValue, Int32.MinValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt32FromDataRow(pDataRow, pColumnName, Int32.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetInt32(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt32FromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
             End Select
         Catch ex As Exception
@@ -484,27 +599,52 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int32"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Int32"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanInt32(Object, Int32, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int32"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Int32"/>.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
     ''' <returns>A clean valid <see cref="Int32"/> that can be used without fear of nulls</returns>
-    Public Function GetInt32FromDataRow(pDataRow As DataRow, pColumnName As String, Optional pDefaultValue As Int32 = Int32.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Int32
+    Public Function GetInt32FromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Int32, pAllowExceptionRollUp As Boolean) As Int32
         Dim rtnValue As Int32 = 0
 
         Try
-            Dim pValueCleaned = GetString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
-
-            'Try converting to Int32
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Int32.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanInt32(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
 
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -516,32 +656,35 @@ Public Class DataRowService
         Return rtnValue
     End Function
 
+
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int64"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Int64"/>.<br />
+    ''' Does call <see cref="GetInt64FromDataRow(DataRow, String, Int64, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int64"/></param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
     ''' <returns>A clean valid <see cref="Int64"/> that can be used without fear of nulls</returns>
-    Public Function GetInt64FromDataRow(pDataRow As DataRow, pColumnName As String) As Int64
+    Public Function GetInt64FromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Int64
         Dim rtnValue As Int64 = 0
 
         Try
             Select Case mCleaningSettings.DefaultValue
                 Case CleaningSettings.DefaultValueEnum.UseMaxVal
                     rtnValue = Int64.MaxValue
-                    rtnValue = GetInt64(pValue, Int64.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt64FromDataRow(pDataRow, pColumnName, Int64.MaxValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
                     rtnValue = 0
-                    rtnValue = GetInt64(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt64FromDataRow(pDataRow, pColumnName, 0, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseMinVal
                     rtnValue = Int64.MinValue
-                    rtnValue = GetInt64(pValue, Int64.MinValue, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt64FromDataRow(pDataRow, pColumnName, Int64.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetInt64(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                    rtnValue = GetInt64FromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
             End Select
         Catch ex As Exception
@@ -555,27 +698,139 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int64"/><br />
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Int64"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanInt64(Object, Int64, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int64"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Int64"/>.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
     ''' <returns>A clean valid <see cref="Int64"/> that can be used without fear of nulls</returns>
-    Public Function GetInt64FromDataRow(pDataRow As DataRow, pColumnName As String, Optional pDefaultValue As Int64 = Int64.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Int64
+    Public Function GetInt64FromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Int64, pAllowExceptionRollUp As Boolean) As Int64
         Dim rtnValue As Int64 = 0
 
         Try
-            Dim pValueCleaned = GetString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
-
-            'Try converting to Int64
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Int64.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanInt64(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="GUID"/>.<br />
+    ''' Does call <see cref="GetGUIDFromDataRow(DataRow, String, GUID, Boolean)"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <returns>A clean valid <see cref="GUID"/> that can be used without fear of nulls</returns>
+    Public Function GetGUIDFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Guid
+        Dim rtnValue As Guid = Guid.Empty
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetGUIDFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                Case Else
+                    rtnValue = Guid.Empty
+                    rtnValue = GetGUIDFromDataRow(pDataRow, pColumnName, Guid.Empty, mCleaningSettings.AllowExceptionRollUp)
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="GUID"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanGUID(Object, GUID, Boolean)"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.<br />Set = Null to let the setting handle default</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="GUID"/> that can be used without fear of nulls</returns>
+    Public Function GetGUIDFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Guid, pAllowExceptionRollUp As Boolean) As Guid
+        Dim rtnValue As Guid = Guid.Empty
+
+        Try
+            If IsNothing(pDefaultValue) = False Then
+                'Default value was set for function use it
+            Else
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = Guid.Empty
+                End If
+            End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanGUID(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
 
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -590,26 +845,34 @@ Public Class DataRowService
 
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to a <see cref="Guid"/><br />
-    ''' The following <see cref="CleaningSettings.DefaultValueEnum"/> values default to <see cref="Guid.Empty"/><br />
-    ''' (<see cref="CleaningSettings.DefaultValueEnum.UseMaxVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseMinVal"/>)
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="DateTime"/>.<br />
+    ''' Does call <see cref="GetDateTimeFromDataRow(DataRow, String, DateTime, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Guid"/></param>
-    ''' <returns>A clean valid <see cref="Guid"/> that can be used without fear of nulls</returns>
-    Public Function GetGUIDFromDataRow(pDataRow As DataRow, pColumnName As String) As Guid
-        Dim rtnValue As Guid = Guid.Empty
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <returns>A clean valid <see cref="DateTime"/> that can be used without fear of nulls</returns>
+    Public Function GetDateTimeFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As DateTime
+        Dim rtnValue As New DateTime(1900, 1, 1)
 
         Try
             Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = DateTime.MaxValue
+                    rtnValue = GetDateTimeFromDataRow(pDataRow, pColumnName, DateTime.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = New DateTime(1900, 1, 1)
+                    rtnValue = GetDateTimeFromDataRow(pDataRow, pColumnName, New DateTime(1900, 1, 1), mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = DateTime.MinValue
+                    rtnValue = GetDateTimeFromDataRow(pDataRow, pColumnName, DateTime.MinValue, mCleaningSettings.AllowExceptionRollUp)
 
                 Case CleaningSettings.DefaultValueEnum.UseNullVal
                     rtnValue = Nothing
-                    rtnValue = GetGUID(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
-                Case Else
+                    rtnValue = GetDateTimeFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
 
-                    rtnValue = Guid.Empty
-                    rtnValue = GetGUID(pValue, Guid.Empty, mCleaningSettings.AllowExceptionRollUp)
             End Select
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -622,32 +885,151 @@ Public Class DataRowService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="GUID"/><br />
-    ''' The following <see cref="CleaningSettings.DefaultValueEnum"/> values default to <see cref="Guid.Empty"/><br />
-    ''' (<see cref="CleaningSettings.DefaultValueEnum.UseMaxVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseMinVal"/>)
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="DateTime"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanDateTime(Object, DateTime, Boolean)"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="GUID"/></param>
-    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="GUID"/>.</param>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
-    ''' <returns>A clean valid <see cref="GUID"/> that can be used without fear of nulls</returns>
-    Public Function GetGUIDFromDataRow(pDataRow As DataRow, pColumnName As String, Optional pDefaultValue As Guid = Nothing, Optional pAllowExceptionRollUp As Boolean = False) As Guid
-        Dim rtnValue As Guid = Guid.Empty
+    ''' <returns>A clean valid <see cref="DateTime"/> that can be used without fear of nulls</returns>
+    Public Function GetDateTimeFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As DateTime, pAllowExceptionRollUp As Boolean) As DateTime
+        Dim rtnValue As New DateTime(1900, 1, 1)
 
         Try
-            If IsNothing(pDefaultValue) Then
-                pDefaultValue = Guid.Empty
-            End If
-            Dim pValueCleaned = GetString(pValue, pDefaultValue.ToString, True, True,, pAllowExceptionRollUp)
-
-            'Try converting to GUID
-            If String.IsNullOrWhiteSpace(pValueCleaned) Then
-                rtnValue = pDefaultValue
+            'Set defaultValue based off of settings
+            If IsNothing(pDefaultValue) = False Then
+                'Default value was set for function use it
             Else
-                If Guid.TryParse(pValueCleaned, rtnValue) = False Then
-                    rtnValue = pDefaultValue
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
                 End If
             End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanDateTime(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+
+    ''' <summary>
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="DateTimeOffset"/>.<br />
+    ''' Does call <see cref="GetDateTimeOffsetFromDataRow(DataRow, String, DateTimeOffset, Boolean)"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <returns>A clean valid <see cref="DateTimeOffset"/> that can be used without fear of nulls</returns>
+    Public Function GetDateTimeOffsetFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As DateTimeOffset
+        Dim rtnValue As DateTimeOffset = New DateTime(1900, 1, 1)
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = DateTimeOffset.MaxValue
+                    rtnValue = GetDateTimeOffsetFromDataRow(pDataRow, pColumnName, DateTimeOffset.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = New DateTime(1900, 1, 1)
+                    rtnValue = GetDateTimeOffsetFromDataRow(pDataRow, pColumnName, New DateTime(1900, 1, 1), mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = DateTimeOffset.MinValue
+                    rtnValue = GetDateTimeOffsetFromDataRow(pDataRow, pColumnName, DateTimeOffset.MinValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetDateTimeOffsetFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="DateTimeOffset"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanDateTimeOffset(Object, DateTimeOffset, Boolean)"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="DateTimeOffset"/> that can be used without fear of nulls</returns>
+    Public Function GetDateTimeOffsetFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As DateTimeOffset, pAllowExceptionRollUp As Boolean) As DateTimeOffset
+        Dim rtnValue As DateTimeOffset = New DateTime(1900, 1, 1)
+
+        Try
+            'Set defaultValue based off of settings
+            If IsNothing(pDefaultValue) = False Then
+                'Default value was set for function use it
+            Else
+                'Default value not set for function look at settings to know what to do
+                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
+                    pDefaultValue = Nothing
+                Else
+                    pDefaultValue = ""
+                End If
+            End If
+
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanDateTimeOffset(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
 
         Catch ex As Exception
             Exceptions.Add(ex)

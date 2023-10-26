@@ -43,7 +43,6 @@ Public Class SimpleCleaningService
 
 #End Region
 
-
     ''' <summary>
     ''' Takes the value and tries to convert it to a <see cref="String"/>.<br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
@@ -62,18 +61,6 @@ Public Class SimpleCleaningService
             'Clear Exceptions
             If mCleaningSettings.ClearExceptionsAfterEachCall = True Then
                 Exceptions.Clear()
-            End If
-
-            'Set defaultValue based off of settings
-            If String.IsNullOrWhiteSpace(pDefaultValue) = False Then
-                'Default value was set for function use it
-            Else
-                'Default value not set for function look at settings to know what to do
-                If mCleaningSettings.DefaultValue = CleaningSettings.DefaultValueEnum.UseNullVal Then
-                    pDefaultValue = Nothing
-                Else
-                    pDefaultValue = ""
-                End If
             End If
 
             'Set rtnValue
@@ -194,6 +181,7 @@ Public Class SimpleCleaningService
             Else
                 If Double.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -206,7 +194,6 @@ Public Class SimpleCleaningService
 
         Return rtnValue
     End Function
-
 
     ''' <summary>
     ''' Takes the Value and tries to convert it to an <see cref="Integer"/><br />
@@ -266,6 +253,7 @@ Public Class SimpleCleaningService
             Else
                 If Integer.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -338,6 +326,7 @@ Public Class SimpleCleaningService
             Else
                 If Long.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -409,6 +398,7 @@ Public Class SimpleCleaningService
             Else
                 If Int16.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -480,6 +470,7 @@ Public Class SimpleCleaningService
             Else
                 If Int32.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -551,6 +542,7 @@ Public Class SimpleCleaningService
             Else
                 If Int64.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -563,8 +555,6 @@ Public Class SimpleCleaningService
 
         Return rtnValue
     End Function
-
-
 
     ''' <summary>
     ''' Takes the Value and tries to convert it to a <see cref="Guid"/><br />
@@ -607,15 +597,24 @@ Public Class SimpleCleaningService
     ''' <param name="pValue">The Value to convert to a <see cref="GUID"/></param>
     ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="GUID"/>.</param>
     ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <param name="pForceDefaultValue"><see cref="Guid"/> will not allow setting the default of <see cref="Guid"/>  = to anything but null in an optional parameter. Only ever need to set this parameter if you are trying to set the default = to null</param>
     ''' <returns>A clean valid <see cref="GUID"/> that can be used without fear of nulls</returns>
-    Public Function GetCleanGUID(pValue As Object, Optional pDefaultValue As Guid = Nothing, Optional pAllowExceptionRollUp As Boolean = False) As Guid
+    Public Function GetCleanGUID(pValue As Object, Optional pDefaultValue As Guid = Nothing, Optional pAllowExceptionRollUp As Boolean = False, Optional pForceDefaultValue As Boolean = False) As Guid
         Dim rtnValue As Guid = Guid.Empty
 
         Try
+            Dim pValueCleaned As String = String.Empty
+
+            'Get value cleaned
             If IsNothing(pDefaultValue) Then
-                pDefaultValue = Guid.Empty
+                If pForceDefaultValue Then
+                    pValueCleaned = GetCleanString(pValue, Nothing, True, True,, pAllowExceptionRollUp)
+                Else
+                    pValueCleaned = GetCleanString(pValue, Guid.Empty.ToString, True, True,, pAllowExceptionRollUp)
+                End If
+            Else
+                pValueCleaned = GetCleanString(pValue, pDefaultValue.ToString, True, True,, pAllowExceptionRollUp)
             End If
-            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue.ToString, True, True,, pAllowExceptionRollUp)
 
             'Try converting to GUID
             If String.IsNullOrWhiteSpace(pValueCleaned) Then
@@ -623,6 +622,7 @@ Public Class SimpleCleaningService
             Else
                 If Guid.TryParse(pValueCleaned, rtnValue) = False Then
                     rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
                 End If
             End If
 
@@ -636,4 +636,156 @@ Public Class SimpleCleaningService
         Return rtnValue
     End Function
 
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="DateTime"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="DateTime"/></param>
+    ''' <returns>A clean valid <see cref="DateTime"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanDateTime(pValue As Object) As DateTime
+        Dim rtnValue As DateTime = DateTime.Now
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = DateTime.MaxValue
+                    rtnValue = GetCleanDateTime(pValue, DateTime.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = New DateTime(1900, 1, 1)
+                    rtnValue = GetCleanDateTime(pValue, DateTime.Now, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = DateTime.MinValue
+                    rtnValue = GetCleanDateTime(pValue, DateTime.MinValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetCleanDateTime(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="DateTime"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="DateTime"/></param>
+    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. If you want the default to equal nothing please set <paramref name="pForceDefaultValue"/> = to true</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <param name="pForceDefaultValue"><see cref="DateTime"/> will not allow setting the default of <see cref="DateTime"/> = to anything but null in an optional parameter. Only ever need to set this parameter if you are trying to set the default = to null</param>
+    ''' <returns>A clean valid <see cref="DateTime"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanDateTime(pValue As Object, Optional pDefaultValue As DateTime = Nothing, Optional pAllowExceptionRollUp As Boolean = False, Optional pForceDefaultValue As Boolean = False) As DateTime
+        Dim rtnValue As New DateTime(1900, 1, 1)
+
+        Try
+            If IsNothing(pDefaultValue) AndAlso pForceDefaultValue = False Then
+                pDefaultValue = New DateTime(1900, 1, 1)
+            End If
+
+            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
+
+            'Try converting to DateTime
+            If String.IsNullOrWhiteSpace(pValueCleaned) Then
+                rtnValue = pDefaultValue
+            Else
+                If DateTime.TryParse(pValueCleaned, rtnValue) = False Then
+                    rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
+                End If
+            End If
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="DateTimeOffset"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="DateTimeOffset"/></param>
+    ''' <returns>A clean valid <see cref="DateTimeOffset"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanDateTimeOffset(pValue As Object) As DateTimeOffset
+        Dim rtnValue As DateTimeOffset = DateTimeOffset.Now
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = DateTimeOffset.MaxValue
+                    rtnValue = GetCleanDateTimeOffset(pValue, DateTimeOffset.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = New DateTime(1900, 1, 1)
+                    rtnValue = GetCleanDateTimeOffset(pValue, DateTimeOffset.Now, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = DateTimeOffset.MinValue
+                    rtnValue = GetCleanDateTimeOffset(pValue, DateTimeOffset.MinValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetCleanDateTimeOffset(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="DateTimeOffset"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="DateTimeOffset"/></param>
+    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to DateTimeOffset of 1/1/1900.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <param name="pForceDefaultValue"><see cref="DateTimeOffset"/>  will not allow setting the default of <see cref="DateTimeOffset"/>  = to anything but null in an optional parameter. Only ever need to set this parameter if you are trying to set the default = to null</param>
+    ''' <returns>A clean valid <see cref="DateTimeOffset"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanDateTimeOffset(pValue As Object, Optional pDefaultValue As DateTimeOffset = Nothing, Optional pAllowExceptionRollUp As Boolean = False, Optional pForceDefaultValue As Boolean = False) As DateTimeOffset
+        Dim rtnValue As DateTimeOffset = New DateTime(1900, 1, 1)
+
+        Try
+            If IsNothing(pDefaultValue) AndAlso pForceDefaultValue = False Then
+                pDefaultValue = New DateTime(1900, 1, 1)
+            End If
+            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue.ToString, True, True,, pAllowExceptionRollUp)
+
+            'Try converting to DateTimeOffset
+            If String.IsNullOrWhiteSpace(pValueCleaned) Then
+                rtnValue = pDefaultValue
+            Else
+                If DateTimeOffset.TryParse(pValueCleaned, rtnValue) = False Then
+                    rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
+                End If
+            End If
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
 End Class
