@@ -9,10 +9,11 @@
     <Description>Provides functionality to always return a valid value. By using these services you will no longer need worry about null values. 
 Just send the data through the functions and get returned the value cleaned or the default value if the value provided is invalid.</Description>
     <PackageTags>cleaner</PackageTags>
-    <PackageReleaseNotes>Added more functionality to SimpleCleaning</PackageReleaseNotes>
+    <PackageReleaseNotes>Added DataRow and DataTable Services
+Updated SimpleCleaningService with some more functionality</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
-    <PackAsTool>True</PackAsTool>
+    <PackAsTool>False</PackAsTool>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
