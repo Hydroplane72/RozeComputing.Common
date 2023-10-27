@@ -7,8 +7,9 @@ Imports RozeComputing.Common.Models.Database
 ''' You should not need to worry about exceptions rolling up into your program when using this.
 ''' TODO:
 ''' Create select from table
-''' Create new table
-''' Update existing table
+''' Create table from object
+'''     Have some default values (They can stop from being created if they really wish):
+'''         Id, Modified, ModifiedBy, Created, CreatedBy
 ''' </summary>
 Public Class DataTableService
     Implements IRozeCompliance
@@ -144,4 +145,5 @@ Public Class DataTableService
             End If
         End Try
     End Sub
+
 End Class

@@ -5,8 +5,7 @@ Imports RozeComputing.Common.Models.Cleaning
 ''' Works with <see cref="DataRow"/> You can: create, update, and delete information in <see cref="DataRow"/> using this service.<br />
 ''' You should not need to worry about exceptions rolling up into your program when using this.
 ''' TODO:
-''' Get Values from DataRows
-''' Update Values in DataRows
+''' Update Value in DataRow
 ''' </summary>
 Public Class DataRowService
     Implements IRozeCompliance
