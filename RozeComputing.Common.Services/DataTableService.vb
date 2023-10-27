@@ -1,6 +1,7 @@
 ﻿Imports System.Data
 Imports RozeComputing.Common.Models
 Imports RozeComputing.Common.Models.Cleaning
+Imports RozeComputing.Common.Models.Database
 ''' <summary>
 ''' Works with <see cref="DataTable"/>'s and does update/delete/selects from them.<br />
 ''' You should not need to worry about exceptions rolling up into your program when using this.
@@ -72,8 +73,8 @@ Public Class DataTableService
     ''' <returns>The DataRows contained within the <see cref="DataTable"/></returns>
     Public Function GetDataRowsFromTable(pDataTable As DataTable, pAllowExceptionRollUp As Boolean) As DataRowCollection
         Dim dt As New DataTable
-        Try
 
+        Try
             Return pDataTable.Rows
         Catch ex As Exception
             Exceptions.Add(ex)
@@ -81,8 +82,10 @@ Public Class DataTableService
                 Throw
             End If
         End Try
+
         Return dt.Rows
     End Function
+
     ''' <summary>
     ''' Gets <see cref="DataRowCollection"/> from DataTable <br />
     ''' You should be able to iterate through the collection like a List in a for Each loop.<br />
@@ -99,4 +102,46 @@ Public Class DataTableService
 
         Return pDataTable.Rows
     End Function
+
+    ''' <summary>
+    ''' Add a column to a table. Pass in the DataType you wish the column to be.
+    ''' </summary>
+    ''' <param name="pDataTable"></param>
+    ''' <param name="pColumnName"></param>
+    ''' <param name="pColumnType"></param>
+    ''' <param name="pAllowExceptionRollUp"></param>
+    Public Sub AddColumnToDataTable(ByRef pDataTable As DataTable, pColumnName As String, pColumnType As Type, pAllowExceptionRollUp As Boolean, Optional pMaxLength As Integer = -1, Optional pAllowNull As Boolean = True, Optional pDefaultValue As Object = Nothing, Optional pAutoIncrementSettings As DataTableAutoIncrementSettings = Nothing, Optional pUniqueValues As Boolean = False)
+
+        Try
+            If pDataTable.Columns.Contains(pColumnName) = True Then
+                Throw New ArgumentException("Column (" & pColumnName & " ) already exists in provided data table.", NameOf(pColumnName))
+            End If
+
+            pDataTable.Columns.Add(pColumnName, pColumnType)
+            If pMaxLength <> -1 Then
+                pDataTable.Columns.Item(pColumnName).MaxLength = mCleaningService.GetCleanInteger(pMaxLength)
+            End If
+            pDataTable.Columns.Item(pColumnName).AllowDBNull = mCleaningService.GetCleanBoolean(pAllowNull)
+
+            'See if passed in and if we care
+            If IsNothing(pAutoIncrementSettings) = False AndAlso pAutoIncrementSettings.IsAutoIncrement = True Then
+                pDataTable.Columns.Item(pColumnName).AutoIncrement = pAutoIncrementSettings.IsAutoIncrement
+                pDataTable.Columns.Item(pColumnName).AutoIncrementSeed = pAutoIncrementSettings.AutoIncrementSeed
+                pDataTable.Columns.Item(pColumnName).AutoIncrementStep = pAutoIncrementSettings.AutoIncrementStep
+            End If
+
+            If pAllowNull = False AndAlso IsNothing(pDefaultValue) Then
+                Throw New ArgumentException(NameOf(pDefaultValue) & " is required when " & NameOf(pAllowNull) & " is set to false.")
+            ElseIf pAllowNull = False AndAlso IsNothing(pDefaultValue) = False Then
+                pDataTable.Columns.Item(pColumnName).DefaultValue = pDefaultValue
+            End If
+            pDataTable.Columns.Item(pColumnName).Unique = mCleaningService.GetCleanBoolean(pUniqueValues)
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+    End Sub
 End Class

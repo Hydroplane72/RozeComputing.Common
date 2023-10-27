@@ -788,4 +788,84 @@ Public Class SimpleCleaningService
 
         Return rtnValue
     End Function
+
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Boolean"/><br />
+    ''' Defaults to <see cref="Boolean" langword=".False"/> if <see cref="CleaningSettings.DefaultValueEnum.UseNullVal"/> is NOT set<br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Boolean"/></param>
+    ''' <returns>A clean valid <see cref="Boolean"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanBoolean(pValue As Object) As Boolean
+        Dim rtnValue As Boolean = 0
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetCleanBoolean(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                Case Else
+                    rtnValue = False
+                    rtnValue = GetCleanBoolean(pValue, False, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Boolean"/><br />
+    ''' Defaults to <see cref="Boolean" langword=".False"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Boolean"/></param>
+    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br />Defaults to <see cref="Boolean" langword=".False" />.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="Boolean"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanBoolean(pValue As Object, Optional pDefaultValue As Boolean = False, Optional pAllowExceptionRollUp As Boolean = False) As Boolean
+        Dim rtnValue As Boolean = 0
+
+        Try
+            'Clean and put to upper to make job easier down below
+            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp).ToUpper
+
+            'Try converting to Boolean
+            If String.IsNullOrWhiteSpace(pValueCleaned) Then
+                rtnValue = pDefaultValue
+            Else
+                If Boolean.TryParse(pValueCleaned, rtnValue) = False Then
+                    'Direct convert did not work try some different combinations
+                    If pValueCleaned.StartsWith("F") OrElse pValueCleaned.StartsWith("N") Then
+                        Return False
+                    ElseIf pValueCleaned.StartsWith("T") OrElse pValueCleaned.StartsWith("Y") Then
+                        Return True
+                    ElseIf pValueCleaned = "1" OrElse pValueCleaned = "-1" Then
+                        Return True
+                    ElseIf pValueCleaned = "0" Then
+                        Return False
+                    End If
+
+                    'No direct parse set and log it.
+                    rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
+                End If
+            End If
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
 End Class

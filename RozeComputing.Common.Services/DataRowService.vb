@@ -1041,4 +1041,84 @@ Public Class DataRowService
         Return rtnValue
     End Function
 
+
+
+    ''' <summary>
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Boolean"/>.<br />
+    ''' Defaults to <see cref="Boolean" langword=".False"/> if <see cref="CleaningSettings.DefaultValueEnum.UseNullVal"/> is NOT set<br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <returns>A clean valid <see cref="Boolean"/> that can be used without fear of nulls</returns>
+    Public Function GetBooleanFromDataRowFromDataRow(pDataRow As DataRow, pColumnName As String) As Boolean
+        Dim rtnValue As Boolean = 0
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetBooleanFromDataRow(pDataRow, pColumnName, Nothing, mCleaningSettings.AllowExceptionRollUp)
+                Case Else
+                    rtnValue = Nothing
+                    rtnValue = GetBooleanFromDataRow(pDataRow, pColumnName, False, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the <paramref name="pDataRow"/>, uses <paramref name="pColumnName"/> to get the value and tries to convert it to a <see cref="Boolean"/>.<br />
+    ''' Does call <see cref="SimpleCleaningService.GetCleanBoolean(Object, Boolean, Boolean)"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pDataRow">The DataRow to look in the data for.</param>
+    ''' <param name="pColumnName">The column to look in the <paramref name="pDataRow"/> for.</param>
+    ''' <param name="pDefaultValue">Default Value to return if: <paramref name="pDataRow"/>, <paramref name="pColumnName"/>, or combination is invalid.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="Boolean"/> that can be used without fear of nulls</returns>
+    Public Function GetBooleanFromDataRow(pDataRow As DataRow, pColumnName As String, pDefaultValue As Boolean, pAllowExceptionRollUp As Boolean) As Boolean
+        Dim rtnValue As Boolean = 0
+
+        Try
+            'Set rtnValue to default value before we start doing any checks
+            rtnValue = pDefaultValue
+
+            'Validate Parameters
+            If IsNothing(pDataRow) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If IsNothing(pColumnName) Then
+                Throw New ArgumentNullException(NameOf(pColumnName), "The parameter " & NameOf(pDataRow) & " is nothing")
+            End If
+
+            If pDataRow.Table.Columns.Contains(pColumnName) = False Then
+                Throw New ArgumentOutOfRangeException(NameOf(pColumnName), pColumnName, "Column does not exist within Parameter (" & NameOf(pDataRow) & ")")
+            End If
+
+            rtnValue = mCleaningService.GetCleanBoolean(pDataRow.Item(pColumnName), pDefaultValue, pAllowExceptionRollUp)
+
+            'Add any errors of using the cleaning service to this service
+            Exceptions.AddRange(mCleaningService.Exceptions)
+            mCleaningService.Exceptions.Clear() 'Clear so we don't add again to our list
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
 End Class
