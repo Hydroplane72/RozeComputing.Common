@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>RozeComputing.Common.Services.MSSQL</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RozeComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
+  </ItemGroup>
+
+</Project>
