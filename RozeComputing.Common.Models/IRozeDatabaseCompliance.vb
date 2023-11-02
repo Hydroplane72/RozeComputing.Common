@@ -18,7 +18,7 @@ Namespace Database
         ''' <param name="pDatabaseFile">The full path and name of the database file</param>
         ''' <param name="pDatabaseName">The name of the database</param>
         ''' <returns>If the operation was successful</returns>
-        Function AttachOrCreateDatabaseOnServer(pDatabaseFile As String, pDatabaseName As String) As Boolean
+        Function AttachOrCreateDatabaseOnServer(pDatabaseFile As String, Optional pDatabaseName As String = "") As Boolean
 
         Function CreateOrAlterTableOnDatabase(pDatabaseName As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean
 

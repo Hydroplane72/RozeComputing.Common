@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RozeComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
+    <ProjectReference Include="..\RozeComputing.Common.Services\RozeComputing.Common.Services.vbproj" />
   </ItemGroup>
 
 </Project>
