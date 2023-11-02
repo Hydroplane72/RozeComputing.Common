@@ -24,7 +24,6 @@
         ''' <returns></returns>
         Public Property Value As Object = New Object
 
-
         Public Property ValueDataType As ParameterDataType = ParameterDataType.NotSet
     End Class
 End Namespace
