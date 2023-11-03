@@ -9,6 +9,7 @@
             IsBoolean = 5
             IsGUID = 6
         End Enum
+
         ''' <summary>
         ''' Name of the Parameter in the sql statement. <br />
         ''' In the SQL Query the parameter name must start with @ to help differentiate between parameter and column names. 
