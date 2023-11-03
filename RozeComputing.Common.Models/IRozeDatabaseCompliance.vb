@@ -22,15 +22,24 @@ Namespace Database
 
         Function CreateOrAlterTableOnDatabase(pDatabaseName As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean
 
-        Function UpdateTableData(pDatabaseName As String, pTableName As String, pSetDataValues As List(Of DatabaseParameter), pWhereValues As List(Of DatabaseParameter)) As Long
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <param name="pDatabaseName"></param>
+        ''' <param name="pTableName"></param>
+        ''' <param name="pSetDataValues"></param>
+        ''' <param name="pWhereValues"></param>
+        ''' <param name="pWhereAnd"></param>
+        ''' <returns></returns>
+        Function UpdateTableData(pDatabaseName As String, pTableName As String, pSetDataValues As List(Of DatabaseParameter), pWhereValues As List(Of DatabaseParameter), pWhereAnd As Boolean) As Long
 
-        Function SelectTableData(pDatabaseName As String, pTableName As String, pSqlStatement As String, pWhereParameters As List(Of DatabaseParameter)) As DataTable
+        Function SelectTableData(pDatabaseName As String, pTableName As String, pSqlStatement As String) As DataTable
 
-        Function DeleteTableData(pDatabaseName As String, pTableName As String, pWhereValues As List(Of DatabaseParameter)) As DataTable
+        Function DeleteTableData(pDatabaseName As String, pTableName As String, pWhereValues As List(Of DatabaseParameter), pWhereAnd As Boolean) As Long
 
-        Function InsertTableData(pDatabaseName As String, pTableName As String, pInsertValues As List(Of DatabaseParameter)) As DataTable
+        Function InsertTableData(pDatabaseName As String, pTableName As String, pInsertValues As List(Of DatabaseParameter)) As Boolean
 
-        Function ExecuteStoredProcedure(pDatabaseName As String, pProcedureName As String, pProcedureParameters As List(Of DatabaseParameter)) As DataTable
+        'Function ExecuteStoredProcedure(pDatabaseName As String, pProcedureName As String, pProcedureParameters As List(Of DatabaseParameter)) As DataTable
 
 #End Region
     End Interface
