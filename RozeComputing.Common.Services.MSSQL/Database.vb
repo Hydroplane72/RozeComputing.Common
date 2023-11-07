@@ -1,3 +1,4 @@
+Imports System.ComponentModel
 Imports System.Data
 Imports System.Diagnostics.Eventing
 Imports System.IO
@@ -259,12 +260,13 @@ Public Class Database
         Return result
     End Function
 
-    Public Function CreateOrAlterTableOnDatabase(pDatabaseName As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean Implements IRozeDatabaseCompliance.CreateOrAlterTableOnDatabase
+    Public Function CreateTableOnDatabase(pDatabaseName As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean Implements IRozeDatabaseCompliance.CreateTableOnDatabase
 
         Dim result As Boolean = True
 
         Try
             OpenConnection()
+
             Dim query As New StringBuilder
             query.AppendLine("Use " & pDatabaseName)
             query.Append("CREATE TABLE ")
@@ -315,6 +317,9 @@ Public Class Database
             End If
 
             query.Append(")"c)
+
+            'Change the databasename
+            mSqlConnection.ChangeDatabase(pDatabaseName)
 
             Using sqlQuery As New SqlCommand(query.ToString(), mSqlConnection)
                 sqlQuery.ExecuteNonQuery()
@@ -370,7 +375,7 @@ Public Class Database
         Return RowsUpdated
     End Function
 
-    Public Function SelectTableData(pDatabaseName As String, pTableName As String, pSqlStatement As String) As DataTable Implements IRozeDatabaseCompliance.SelectTableData
+    Public Function SelectTableData(pDatabaseName As String, pSqlStatement As String) As DataTable Implements IRozeDatabaseCompliance.SelectTableData
         Dim selectedData As New DataTable
         Try
             OpenConnection()
@@ -458,5 +463,126 @@ Public Class Database
         Return rowsInserted
     End Function
 
+    Public Function UpdateInsertTableData(pDatabaseName As String, pDataTable As DataTable) As Integer Implements IRozeDatabaseCompliance.UpdateInsertTableData
+        Dim rowsChanged As Integer = 0
+
+        Try
+
+            Dim sqlStatement As String = "Select * from " & pDataTable.TableName & " WHERE 1=0"
+
+            mSqlConnection.ChangeDatabase(pDatabaseName)
+
+            'Start a transaction so we can roll back if need be
+            Using sqlTransaction As SqlTransaction = mSqlConnection.BeginTransaction("Transaction_" & pDataTable.TableName)
+
+                Using adapter As New SqlDataAdapter(sqlStatement, mSqlConnection)
+
+                    Using commandBuilder As New SqlCommandBuilder(adapter) With {
+                        .SetAllValues = False
+                    }
+                        adapter.DeleteCommand = commandBuilder.GetDeleteCommand(True)
+                        adapter.DeleteCommand.Transaction = sqlTransaction
+                        adapter.UpdateCommand = commandBuilder.GetUpdateCommand(True)
+                        adapter.UpdateCommand.Transaction = sqlTransaction
+                        adapter.InsertCommand = commandBuilder.GetInsertCommand(True)
+                        adapter.InsertCommand.Transaction = sqlTransaction
+
+                        Try
+                            'Update the Data table in the database
+                            rowsChanged = adapter.Update(pDataTable)
+
+                            'try committing the changes
+                            sqlTransaction.Commit()
+                        Catch ex As Exception
+                            Exceptions.Add(ex)
+                            rowsChanged = -1
+                            'Try rolling back the transaction since we hit an error
+                            Try
+                                sqlTransaction.Rollback()
+                            Catch rollBackException As Exception
+                                Exceptions.Add(rollBackException)
+                            End Try
+
+                        End Try
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            rowsChanged = -1
+        End Try
+
+        Return rowsChanged
+    End Function
+
+    ''' <summary>
+    ''' MSSQL DATABASE SPECIFIC<br />
+    ''' Updates the table using the passed in commands as guidelines
+    ''' </summary>
+    ''' <param name="pDatabaseName">The database to run against</param>
+    ''' <param name="pDataTable">Contains rows that you have updated, Added, or marked as deleted</param>
+    ''' <param name="pSelectCommand">Use to get the structure that matches the <paramref name="pDataTable"/></param>
+    ''' <param name="pDeleteCommand">Use to set the sql statement to delete data by.</param>
+    ''' <param name="pUpdateCommand">Use to set the sql statement to update data by</param>
+    ''' <param name="pInsertCommand">Use to set the sql statement to insert data by</param>
+    ''' <param name="pParameterCollection">The parameters that we will use to substitute within the where statements in the commands.</param>
+    ''' <returns>Number of rows Updated, Deleted, and added to the datatable.</returns>
+    Public Function UpdateInsertTableData(pDatabaseName As String, pDataTable As DataTable, pSelectCommand As String, pDeleteCommand As String, pUpdateCommand As String, pInsertCommand As String, pParameterCollection As List(Of SqlParameter)) As Integer
+        Dim rowsChanged As Integer = 0
+
+        Try
+            mSqlConnection.ChangeDatabase(pDatabaseName)
+
+            'Start a transaction so we can roll back if need be
+            Using sqlTransaction As SqlTransaction = mSqlConnection.BeginTransaction("Transaction_" & pDataTable.TableName)
+
+                'Create the select cmd so we know the data table we are working with
+                Using sqlSelectCmd As New SqlCommand(pSelectCommand, mSqlConnection, sqlTransaction)
+                    sqlSelectCmd.Parameters.AddRange(pParameterCollection.ToArray)
+
+                    'Create the adapter for working with the database
+                    Using adapter As New SqlDataAdapter(sqlSelectCmd)
+
+                        'Set each cmd type so we can then send the data table through without fear
+                        adapter.DeleteCommand = New SqlCommand(pDeleteCommand, mSqlConnection, sqlTransaction)
+                        adapter.DeleteCommand.Parameters.Clear()
+                        adapter.DeleteCommand.Parameters.AddRange(pParameterCollection.ToArray)
+
+                        adapter.UpdateCommand = New SqlCommand(pUpdateCommand, mSqlConnection, sqlTransaction)
+                        adapter.UpdateCommand.Parameters.Clear()
+                        adapter.UpdateCommand.Parameters.AddRange(pParameterCollection.ToArray)
+
+                        adapter.InsertCommand = New SqlCommand(pInsertCommand, mSqlConnection, sqlTransaction)
+                        adapter.InsertCommand.Parameters.Clear()
+                        adapter.InsertCommand.Parameters.AddRange(pParameterCollection.ToArray)
+
+
+                        Try
+                            'Update the Data table in the database
+                            rowsChanged = adapter.Update(pDataTable)
+
+                            'try committing the changes
+                            sqlTransaction.Commit()
+                        Catch ex As Exception
+                            Exceptions.Add(ex)
+                            rowsChanged = -1
+                            'Try rolling back the transaction since we hit an error
+                            Try
+                                sqlTransaction.Rollback()
+                            Catch rollBackException As Exception
+                                Exceptions.Add(rollBackException)
+                            End Try
+
+                        End Try
+                    End Using
+                End Using
+            End Using
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            rowsChanged = -1
+        End Try
+
+        Return rowsChanged
+    End Function
 #End Region
 End Class
