@@ -3,7 +3,26 @@
   <PropertyGroup>
     <RootNamespace>RozeComputing.Common.Services.MSSQL</RootNamespace>
     <TargetFramework>net6.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Roze Computing Common Services MSSQL</Title>
+    <Description>Provides functionality to be able to connect to mssql in an easy manner.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>mssql; service</PackageTags>
+    <PackageReleaseNotes>Created the service with some basic funcationality</PackageReleaseNotes>
+    <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.2" />

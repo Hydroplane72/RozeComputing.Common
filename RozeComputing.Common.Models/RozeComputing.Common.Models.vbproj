@@ -8,7 +8,7 @@
     <Authors>Roze Computing, Matthew Rozendaal</Authors>
     <Description>Models used by and shared by Roze Computing Services</Description>
     <PackageTags>models</PackageTags>
-    <PackageReleaseNotes>Added a model for DataTables. May move to a different namespace later on as things are added.</PackageReleaseNotes>
+    <PackageReleaseNotes>Functionality Additions</PackageReleaseNotes>
     <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
   </PropertyGroup>
 
