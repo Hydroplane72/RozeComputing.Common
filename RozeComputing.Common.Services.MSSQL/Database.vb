@@ -1,9 +1,6 @@
-Imports System.ComponentModel
 Imports System.Data
-Imports System.Diagnostics.Eventing
 Imports System.IO
 Imports System.Text
-Imports Microsoft.Data
 Imports Microsoft.Data.SqlClient
 Imports RozeComputing.Common.Models
 Imports RozeComputing.Common.Models.Cleaning
@@ -108,8 +105,11 @@ Public Class Database
     ''' Takes the settings and gets the connection string from them. Creating the SQL Connection
     ''' </summary>
     ''' <param name="pConnectionSetting"></param>
-    Sub New(pConnectionSetting As SqlConnectionStringBuilder, pCleaningSettings As CleaningSettings)
+    Sub New(pConnectionSetting As SqlConnectionStringBuilder, Optional pCleaningSettings As CleaningSettings = Nothing)
         Try
+            If IsNothing(pCleaningSettings) Then
+                pCleaningSettings = New CleaningSettings()
+            End If
             mSimpleCleaner = New SimpleCleaningService(pCleaningSettings)
             mConnectionSettings = pConnectionSetting
 
@@ -123,8 +123,11 @@ Public Class Database
     ''' Takes the Connection String and adds it to the <see cref="ConnectionSettings"/> property as <see cref="SqlConnectionStringBuilder.ConnectionString"/>
     ''' </summary>
     ''' <param name="pConnectionString">A valid connection string. Invalid connection strings will be add to <see cref="Exceptions"/></param>
-    Sub New(pConnectionString As String, pCleaningSettings As CleaningSettings)
+    Sub New(pConnectionString As String, Optional pCleaningSettings As CleaningSettings = Nothing)
         Try
+            If IsNothing(pCleaningSettings) Then
+                pCleaningSettings = New CleaningSettings()
+            End If
             mSimpleCleaner = New SimpleCleaningService(pCleaningSettings)
             ConnectionSettings.ConnectionString = pConnectionString
 
@@ -139,6 +142,8 @@ Public Class Database
     Private Sub SetSQLConnection()
         Try
             mSqlConnection.ConnectionString = ConnectionSettings.ConnectionString
+            Dim a As String
+            a = ""
         Catch ex As Exception
             Exceptions.Add(ex)
         End Try
@@ -379,6 +384,7 @@ Public Class Database
         Dim selectedData As New DataTable
         Try
             OpenConnection()
+            mSqlConnection.ChangeDatabase(pDatabaseName)
 
             Using sqlCmd As New SqlCommand(pSqlStatement, mSqlConnection)
                 Using adapter As New SqlDataAdapter(sqlCmd)
@@ -472,22 +478,28 @@ Public Class Database
 
             mSqlConnection.ChangeDatabase(pDatabaseName)
 
-            'Start a transaction so we can roll back if need be
-            Using sqlTransaction As SqlTransaction = mSqlConnection.BeginTransaction("Transaction_" & pDataTable.TableName)
 
-                Using adapter As New SqlDataAdapter(sqlStatement, mSqlConnection)
 
-                    Using commandBuilder As New SqlCommandBuilder(adapter) With {
-                        .SetAllValues = False
-                    }
-                        adapter.DeleteCommand = commandBuilder.GetDeleteCommand(True)
-                        adapter.DeleteCommand.Transaction = sqlTransaction
-                        adapter.UpdateCommand = commandBuilder.GetUpdateCommand(True)
-                        adapter.UpdateCommand.Transaction = sqlTransaction
-                        adapter.InsertCommand = commandBuilder.GetInsertCommand(True)
-                        adapter.InsertCommand.Transaction = sqlTransaction
 
+            Using adapter As New SqlDataAdapter(sqlStatement, mSqlConnection)
+
+
+                Using commandBuilder As New SqlCommandBuilder(adapter) With {
+                    .SetAllValues = False
+                }
+                    adapter.DeleteCommand = commandBuilder.GetDeleteCommand(True)
+                    adapter.UpdateCommand = commandBuilder.GetUpdateCommand(True)
+                    adapter.InsertCommand = commandBuilder.GetInsertCommand(True)
+
+                    'Start a transaction so we can roll back if need be
+                    Using sqlTransaction As SqlTransaction = mSqlConnection.BeginTransaction("Transaction_" & pDataTable.TableName)
                         Try
+
+                            adapter.DeleteCommand.Transaction = sqlTransaction
+                            adapter.UpdateCommand.Transaction = sqlTransaction
+                            adapter.InsertCommand.Transaction = sqlTransaction
+
+
                             'Update the Data table in the database
                             rowsChanged = adapter.Update(pDataTable)
 
