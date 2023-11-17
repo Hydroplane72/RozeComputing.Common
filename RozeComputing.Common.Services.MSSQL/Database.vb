@@ -177,14 +177,18 @@ Public Class Database
             'Set where statements
             For Each whereValue In pWhereValues
                 query.Append(" "c)
-                query.Append("[" & whereValue.Name & "] = ")
-                query.Append(" = ")
+                query.Append("[")
+                query.Append(whereValue.ColumnName)
+                query.Append("] = ")
 
-                If whereValue.ValueDataType = DatabaseParameter.ParameterDataType.IsString Then
-                    query.Append("'" & whereValue.Value & "'")
-                Else
-                    query.Append(whereValue.Value)
-                End If
+                'Set for Parameters
+                query.Append(" @" & whereValue.ColumnName.Replace(" ", "") & " ")
+
+                'If whereValue.ValueDataType = DatabaseParameter.ParameterDataType.IsString Then
+                '    query.Append("'" & whereValue.Value & "'")
+                'Else
+                '    query.Append(whereValue.Value)
+                'End If
 
                 If pWhereAnd = True Then
                     query.Append(" AND")
@@ -272,61 +276,126 @@ Public Class Database
         Try
             OpenConnection()
 
-            Dim query As New StringBuilder
-            query.AppendLine("Use " & pDatabaseName)
-            query.Append("CREATE TABLE ")
-            query.Append(pTableName)
-            query.AppendLine(" ( ")
+            Dim createTableQuery As New StringBuilder
+            Dim constraintsQuery As New StringBuilder
+            createTableQuery.AppendLine("Use " & pDatabaseName)
+            createTableQuery.Append(" CREATE TABLE [")
+            createTableQuery.Append(pTableName)
+            createTableQuery.AppendLine("] ( ")
 
             'Create the table structure
             For Each DataColumn In pColumns
-                query.Append(DataColumn.ColumnName)
-                query.Append(" "c)
+                createTableQuery.Append(" [")
+                createTableQuery.Append(DataColumn.ColumnName)
+                createTableQuery.Append("] ")
                 'Convert types to database type
                 Select Case DataColumn.DataType.ToString()
                     Case "System.Int32"
-                        query.Append(" int ")
+                        createTableQuery.Append(" int ")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) <> Integer.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
                     Case "System.Int64"
-                        query.Append(" bigint ")
+                        createTableQuery.Append(" bigint ")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInt64(DataColumn.DefaultValue) <> Long.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt64(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
                     Case "System.Int16"
-                        query.Append(" smallint")
-                    Case "System.Byte"
-                        query.Append(" tinyint")
+                        createTableQuery.Append(" smallint")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) <> Short.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
+                    'Commented Out because we don't ahve a GetClean Created for this yet
+                    'Case "System.Byte"
+                    '    createTableQuery.Append(" tinyint")
+                    '    'Create default Constraints when needed
+                    '    If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) <> Integer.MinValue Then
+                    '        constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_"& DataColumn.ColumnName & "] DEFAULT (" & DataColumn.DefaultValue & ") FOR [" & DataColumn.ColumnName & "]")
+                    '    End If
                     Case "System.Decimal"
-                        query.Append(" decimal ")
+                        createTableQuery.Append(" decimal ")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) <> Double.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
                     Case "System.DateTime"
-                        query.Append(" datetime ")
+                        createTableQuery.Append(" datetime ")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanDateTime(DataColumn.DefaultValue) <> DateTime.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDateTime(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
+                    Case "System.Guid"
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanGUID(DataColumn.DefaultValue) <> Guid.Empty Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (newid()) FOR [" & DataColumn.ColumnName & "]")
+                        End If
+                        createTableQuery.Append(" uniqueidentifier ROWGUIDCOL")
                     Case "System.String"
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanString(DataColumn.DefaultValue) <> String.Empty Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT ('" & mSimpleCleaner.GetCleanString(DataColumn.DefaultValue) & "') FOR [" & DataColumn.ColumnName & "]")
+                        End If
                         If DataColumn.MaxLength = -1 Then
-                            query.Append(" nvarchar(MAX) ")
+                            createTableQuery.Append(" nvarchar(MAX) ")
                         Else
-                            query.Append(" nvarchar(")
-                            query.Append(DataColumn.MaxLength)
-                            query.Append(")"c)
+                            createTableQuery.Append(" nvarchar(")
+                            createTableQuery.Append(DataColumn.MaxLength)
+                            createTableQuery.Append(")"c)
                         End If
                     Case Else
                         If DataColumn.MaxLength = -1 Then
-                            query.Append(" nvarchar(MAX) ")
+                            createTableQuery.Append(" nvarchar(MAX) ")
                         Else
-                            query.Append(" nvarchar(")
-                            query.Append(DataColumn.MaxLength)
-                            query.Append(")"c)
+                            createTableQuery.Append(" nvarchar(")
+                            createTableQuery.Append(DataColumn.MaxLength)
+                            createTableQuery.Append(")"c)
                         End If
                 End Select
-                query.Append(DataColumn.DataType)
-                query.Append(", ")
+
+                If DataColumn.AllowDBNull = False Then
+                    createTableQuery.Append(" Not Null")
+                End If
+                'query.Append(DataColumn.DataType)
+                createTableQuery.Append(", ")
+
+
             Next
 
             If pColumns.Count > 1 Then
-                query.Length -= 2
+                createTableQuery.Length -= 2
             End If
 
-            query.Append(")"c)
+            createTableQuery.Append(")"c)
 
             'Change the databasename
             mSqlConnection.ChangeDatabase(pDatabaseName)
 
-            Using sqlQuery As New SqlCommand(query.ToString(), mSqlConnection)
+
+            Using sqlQuery As New SqlCommand()
+                sqlQuery.Connection = mSqlConnection
+
+                'Check if table exists before we try creating one. If already exists do nothing
+                Dim dt As New DataTable
+                sqlQuery.CommandText = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = '" & pTableName & "'"
+
+                Using adapter As New SqlDataAdapter(sqlQuery)
+                    adapter.Fill(dt)
+                End Using
+
+                If dt.Rows.Count <> 0 Then
+                    'Table already exists do nothing
+                    Return False
+                End If
+
+                'Create the table
+                sqlQuery.CommandText = createTableQuery.ToString()
+                sqlQuery.ExecuteNonQuery()
+
+                'Create the constraints
+                sqlQuery.CommandText = constraintsQuery.ToString()
                 sqlQuery.ExecuteNonQuery()
             End Using
 
@@ -342,35 +411,45 @@ Public Class Database
 
         Try
             OpenConnection()
-            Dim query As New StringBuilder
-
-            query.AppendLine("Use " & pDatabaseName)
-            query.Append("Update " & pTableName & " (")
-
-            'Set Columns to update
-            For Each setValue In pSetDataValues
-                query.Append("[" & setValue.Name & "] = ")
-
-                If setValue.ValueDataType = DatabaseParameter.ParameterDataType.IsString Then
-                    query.Append("'" & setValue.Value & "'")
-                Else
-                    query.Append(setValue.Value)
-                End If
-
-                query.Append(","c)
-            Next
-
-            'Get rid of the extra ,
-            query.Length -= 1
-            query.AppendLine()
-
-            'Set where statements
-            query.Append(GetWhereStatement(pWhereValues, pWhereAnd))
-
-            query.Append(";"c)
+            mSqlConnection.ChangeDatabase(pDatabaseName)
 
             'Run the query
-            Using sqlQuery As New SqlCommand(query.ToString(), mSqlConnection)
+            Using sqlQuery As New SqlCommand()
+                sqlQuery.Connection = mSqlConnection
+
+                Dim query As New StringBuilder
+
+
+                query.AppendLine("Update " & pTableName & " ")
+                query.Append("Set ")
+                'Set Columns to update
+                For Each setValue In pSetDataValues
+                    query.Append("["c)
+                    query.Append(setValue.ColumnName)
+                    query.Append("] = ")
+
+                    query.Append(" @Sets")
+                    query.Append(setValue.ColumnName.Replace(" ", ""))
+                    query.Append(" ,")
+
+                    sqlQuery.Parameters.AddWithValue("@Sets" & setValue.ColumnName.Replace(" ", ""), setValue.Value)
+                Next
+
+                'Get rid of the extra ,
+                query.Length -= 1
+                query.AppendLine()
+
+                'Set where statements
+                query.Append(GetWhereStatement(pWhereValues, pWhereAnd))
+
+                query.Append(";"c)
+
+                'Get Where statement parameters
+                For Each whereParam In pWhereValues
+                    sqlQuery.Parameters.AddWithValue("@" & whereParam.ColumnName.Replace(" ", ""), whereParam.Value)
+                Next
+
+                sqlQuery.CommandText = query.ToString()
                 RowsUpdated = sqlQuery.ExecuteNonQuery()
             End Using
         Catch ex As Exception
@@ -402,17 +481,27 @@ Public Class Database
         Dim rowCount As Long = 0
         Try
             OpenConnection()
+            mSqlConnection.ChangeDatabase(pDatabaseName)
 
             Dim query As New StringBuilder
-            query.Append("Delete From ")
+            query.Append("Delete From [")
             query.Append(pTableName)
-            query.Append(" "c)
-
-            'Set where statements
-            query.Append(GetWhereStatement(pWhereValues, pWhereAnd))
+            query.Append("] ")
+            If pWhereValues.Count > 0 Then
+                'Set where statements
+                query.Append(GetWhereStatement(pWhereValues, pWhereAnd))
+            End If
 
             'Delete the data
             Using sqlQuery As New SqlCommand(query.ToString(), mSqlConnection)
+
+                If pWhereValues.Count > 0 Then
+                    'Add Parameters with values
+                    For Each param In pWhereValues
+                        sqlQuery.Parameters.AddWithValue(param.ColumnName.Replace(" ", ""), param.Value)
+                    Next
+                End If
+
                 rowCount = sqlQuery.ExecuteNonQuery()
             End Using
 
@@ -424,40 +513,52 @@ Public Class Database
 
     Public Function InsertTableData(pDatabaseName As String, pTableName As String, pInsertValues As List(Of DatabaseParameter)) As Boolean Implements IRozeDatabaseCompliance.InsertTableData
 
-        Dim rowsInserted As Boolean = True
+        Dim rowsInserted As Integer = 0
 
         Try
             OpenConnection()
-            Dim query As New StringBuilder
-            Dim queryValues As New StringBuilder
+            Using sqlQuery As New SqlCommand()
+                sqlQuery.Connection = mSqlConnection
 
-            query.AppendLine("Use " & pDatabaseName)
-            query.Append("Insert Into " & pTableName & " (")
+                Dim query As New StringBuilder
+                Dim queryValues As New StringBuilder
 
-            queryValues.Append("Values (")
-            For Each pSetValue In pInsertValues
-                query.Append("[" & pSetValue.Name & "]")
-                query.Append(","c)
+                query.AppendLine("Use " & pDatabaseName)
+                query.Append("Insert Into " & pTableName & " (")
 
-                If pSetValue.ValueDataType = DatabaseParameter.ParameterDataType.IsString Then
-                    queryValues.Append("'" & pSetValue.Value & "'")
-                Else
-                    queryValues.Append(pSetValue.Value)
-                End If
+                queryValues.Append(" Values (")
+                For Each pSetValue In pInsertValues
 
-                query.Append(","c)
-                queryValues.Append(","c)
-            Next
+                    'Replace column names to not have a space
+                    If IsNothing(pSetValue) Then
+                        sqlQuery.Parameters.AddWithValue("@" & pSetValue.ColumnName.Replace(" ", ""), DBNull.Value)
+                    Else
+                        sqlQuery.Parameters.AddWithValue("@" & pSetValue.ColumnName.Replace(" ", ""), pSetValue.Value)
+                    End If
 
-            query.Length -= 1
-            queryValues.Length -= 1
+                    query.Append("[" & pSetValue.ColumnName & "]")
+                    queryValues.Append(" @" & pSetValue.ColumnName.Replace(" ", ""))
 
-            query.Append(")"c)
-            queryValues.Append(");")
+                    'If pSetValue.ValueDataType = DatabaseParameter.ParameterDataType.IsString Then
+                    '    queryValues.Append("'" & pSetValue.Value & "'")
+                    'Else
+                    '    queryValues.Append(pSetValue.Value)
+                    'End If
 
-            query.AppendLine(queryValues.ToString())
+                    query.Append(","c)
+                    queryValues.Append(","c)
+                Next
 
-            Using sqlQuery As New SqlCommand(query.ToString(), mSqlConnection)
+                query.Length -= 1
+                queryValues.Length -= 1
+
+                query.Append(")"c)
+                queryValues.Append(");")
+
+                query.AppendLine(queryValues.ToString())
+
+
+                sqlQuery.CommandText = query.ToString
                 rowsInserted = sqlQuery.ExecuteNonQuery()
             End Using
 

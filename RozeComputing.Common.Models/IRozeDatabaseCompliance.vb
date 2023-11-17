@@ -21,7 +21,9 @@ Namespace Database
         Function AttachOrCreateDatabaseOnServer(pDatabaseFile As String, Optional pDatabaseName As String = "") As Boolean
 
         ''' <summary>
-        ''' Creates the table on the database using the column list passed in.
+        ''' Creates the table on the database using the column list passed in. Please be sure your <paramref name="pTableName"/> and <paramref name="pColumns"/> information is sql injection safe. 
+        ''' This does not attempt to look for that.<br />
+        ''' If table already exists. Does not try and returns False
         ''' </summary>
         ''' <param name="pDatabaseName">Name of the database</param>
         ''' <param name="pTableName">Name of the table to create</param>

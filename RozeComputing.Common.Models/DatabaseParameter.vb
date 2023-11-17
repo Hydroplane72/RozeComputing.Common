@@ -1,14 +1,24 @@
 ﻿Namespace Database
     Public Class DatabaseParameter
-        Enum ParameterDataType
-            NotSet = 0
-            IsString = 1
-            IsDouble = 2
-            IsDecimal = 3
-            IsDateTime = 4
-            IsBoolean = 5
-            IsGUID = 6
-        End Enum
+        ''' <summary>
+        ''' Initialize the class with values instead of having to set each individually
+        ''' </summary>
+        ''' <param name="pColumnName"><see cref="ColumnName"/></param>
+        ''' <param name="pValue"><see cref="Value"/></param>
+        Public Sub New(pColumnName As String, pValue As Object)
+            ColumnName = pColumnName
+            Value = pValue
+        End Sub
+
+        'Enum ParameterDataType
+        '    NotSet = 0
+        '    IsString = 1
+        '    IsDouble = 2
+        '    IsDecimal = 3
+        '    IsDateTime = 4
+        '    IsBoolean = 5
+        '    IsGUID = 6
+        'End Enum
 
         ''' <summary>
         ''' Name of the Parameter in the sql statement. <br />
@@ -17,7 +27,7 @@
         ''' </summary>
         ''' <example></example>
         ''' <returns></returns>
-        Public Property Name As String = String.Empty
+        Public Property ColumnName As String = String.Empty
 
         ''' <summary>
         ''' The value of the Parameter. Most databases types are able to convert to the correct datatype. If have issues then set 
@@ -25,6 +35,5 @@
         ''' <returns></returns>
         Public Property Value As Object = New Object
 
-        Public Property ValueDataType As ParameterDataType = ParameterDataType.NotSet
     End Class
 End Namespace

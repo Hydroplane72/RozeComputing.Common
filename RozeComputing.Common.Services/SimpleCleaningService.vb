@@ -559,7 +559,7 @@ Public Class SimpleCleaningService
     ''' <summary>
     ''' Takes the Value and tries to convert it to a <see cref="Guid"/><br />
     ''' The following <see cref="CleaningSettings.DefaultValueEnum"/> values default to <see cref="Guid.Empty"/><br />
-    ''' (<see cref="CleaningSettings.DefaultValueEnum.UseMaxVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseMinVal"/>)
+    ''' (<see cref="CleaningSettings.DefaultValueEnum.UseMaxVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseMinVal"/>) <br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
     ''' <param name="pValue">The Value to convert to a <see cref="Guid"/></param>

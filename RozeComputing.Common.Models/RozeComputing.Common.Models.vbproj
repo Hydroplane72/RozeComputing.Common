@@ -8,8 +8,9 @@
     <Authors>Roze Computing, Matthew Rozendaal</Authors>
     <Description>Models used by and shared by Roze Computing Services</Description>
     <PackageTags>models</PackageTags>
-    <PackageReleaseNotes>Functionality Additions</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated Database.DatabaseParameter to not contain unneeded information</PackageReleaseNotes>
     <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
+    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>

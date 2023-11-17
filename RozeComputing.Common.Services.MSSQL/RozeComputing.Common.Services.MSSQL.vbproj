@@ -8,7 +8,7 @@
     <Description>Provides functionality to be able to connect to mssql in an easy manner.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>mssql; service</PackageTags>
-    <PackageReleaseNotes>Created the service with some basic funcationality</PackageReleaseNotes>
+    <PackageReleaseNotes>Added some unit testing to the project to make sure funcationality actually works</PackageReleaseNotes>
     <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
