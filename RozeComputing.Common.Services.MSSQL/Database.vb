@@ -285,7 +285,7 @@ Public Class Database
         Return result
     End Function
 
-    Public Function DropTableOnDatabase(pDatabaseName As String, pTableName As String) As Boolean
+    Public Function DropTableOnDatabase(pDatabaseName As String, pTableSchema As String, pTableName As String) As Boolean Implements IRozeDatabaseCompliance.DropTableOnDatabase
         Dim result As Boolean = True
 
         Try
@@ -309,7 +309,7 @@ Public Class Database
                 If dt.Rows.Count = 0 Then
                     'Table does not exist no need to do any more work
                     'Throw message into exceptions to let know that we did nothing
-                    Throw New WarningException("Table Name: " & pTableName & " does not exist so can not drop it.")
+                    Throw New WarningException("Table Name: " & pTableSchema & "." & pTableName & " does not exist so can not drop it.")
                 End If
 
                 'Get the list of constraints
@@ -317,7 +317,7 @@ Public Class Database
                                 FROM            sys.objects AS tableNamed 
                                 INNER JOIN sys.objects AS ConstraintNamed ON tableNamed.object_id = ConstraintNamed.parent_object_id 
                                 INNER JOIN sys.schemas ON tableNamed.schema_id = sys.schemas.schema_id
-                                WHERE (tableNamed.name = N'" & pTableName & "') AND (ConstraintNamed.type_desc LIKE N'%CONSTRAINT')")
+                                WHERE (tableNamed.name = N'" & pTableName & "') AND (ConstraintNamed.type_desc LIKE N'%CONSTRAINT') AND (sys.Schemas.name = N'" & pTableSchema & "')")
                 sqlQuery.CommandText = query.ToString
                 dt = New DataTable
                 Using adapter As New SqlDataAdapter(sqlQuery)
@@ -345,7 +345,7 @@ Public Class Database
                 sqlQuery.ExecuteNonQuery()
 
                 'Drop the table
-                sqlQuery.CommandText = "Drop Table dbo.[" & pTableName & "]"
+                sqlQuery.CommandText = "Drop Table " & pTableSchema & ".[" & pTableName & "]"
                 sqlQuery.ExecuteNonQuery()
             End Using
         Catch ex As Exception
@@ -355,7 +355,8 @@ Public Class Database
 
         Return result
     End Function
-    Public Function CreateTableOnDatabase(pDatabaseName As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean Implements IRozeDatabaseCompliance.CreateTableOnDatabase
+
+    Public Function CreateTableOnDatabase(pDatabaseName As String, pTableSchema As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean Implements IRozeDatabaseCompliance.CreateTableOnDatabase
 
         Dim result As Boolean = True
 
@@ -380,49 +381,49 @@ Public Class Database
                         createTableQuery.Append(" int ")
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) <> Integer.MinValue Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
                     Case "System.Int64"
                         createTableQuery.Append(" bigint ")
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInt64(DataColumn.DefaultValue) <> Long.MinValue Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt64(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt64(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
                     Case "System.Int16"
                         createTableQuery.Append(" smallint")
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) <> Short.MinValue Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
                     'Commented Out because we don't ahve a GetClean Created for this yet
                     'Case "System.Byte"
                     '    createTableQuery.Append(" tinyint")
                     '    'Create default Constraints when needed
                     '    If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) <> Integer.MinValue Then
-                    '        constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_"& DataColumn.ColumnName & "] DEFAULT (" & DataColumn.DefaultValue & ") FOR [" & DataColumn.ColumnName & "]")
+                    '        constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_"& DataColumn.ColumnName & "] DEFAULT (" & DataColumn.DefaultValue & ") FOR [" & DataColumn.ColumnName & "]")
                     '    End If
                     Case "System.Decimal"
                         createTableQuery.Append(" decimal ")
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) <> Double.MinValue Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
                     Case "System.DateTime"
                         createTableQuery.Append(" datetime ")
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanDateTime(DataColumn.DefaultValue) <> DateTime.MinValue Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDateTime(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDateTime(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
                     Case "System.Guid"
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanGUID(DataColumn.DefaultValue) <> Guid.Empty Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (newid()) FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (newid()) FOR [" & DataColumn.ColumnName & "]")
                         End If
                         createTableQuery.Append(" uniqueidentifier ROWGUIDCOL")
                     Case "System.String"
                         'Create default Constraints when needed
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanString(DataColumn.DefaultValue) <> String.Empty Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT ('" & mSimpleCleaner.GetCleanString(DataColumn.DefaultValue) & "') FOR [" & DataColumn.ColumnName & "]")
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT ('" & mSimpleCleaner.GetCleanString(DataColumn.DefaultValue) & "') FOR [" & DataColumn.ColumnName & "]")
                         End If
                         If DataColumn.MaxLength = -1 Then
                             createTableQuery.Append(" nvarchar(MAX) ")
@@ -465,7 +466,7 @@ Public Class Database
 
                 'Check if table exists before we try creating one. If already exists do nothing
                 Dim dt As New DataTable
-                sqlQuery.CommandText = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND  TABLE_NAME = '" & pTableName & "'"
+                sqlQuery.CommandText = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" & pTableSchema & "' AND  TABLE_NAME = '" & pTableName & "'"
 
                 Using adapter As New SqlDataAdapter(sqlQuery)
                     adapter.Fill(dt)
@@ -492,7 +493,7 @@ Public Class Database
         Return result
     End Function
 
-    Public Function UpdateTableData(pDatabaseName As String, pTableName As String, pSetDataValues As List(Of DatabaseParameter), pWhereValues As List(Of DatabaseParameter), pWhereAnd As Boolean) As Long Implements IRozeDatabaseCompliance.UpdateTableData
+    Public Function UpdateTableData(pDatabaseName As String, pTableSchema As String, pTableName As String, pSetDataValues As List(Of DatabaseParameter), pWhereValues As List(Of DatabaseParameter), pWhereAnd As Boolean) As Long Implements IRozeDatabaseCompliance.UpdateTableData
         Dim RowsUpdated As Long = 0
 
         Try
@@ -506,7 +507,7 @@ Public Class Database
                 Dim query As New StringBuilder
 
 
-                query.AppendLine("Update " & pTableName & " ")
+                query.AppendLine("Update [" & pTableSchema & "][" & pTableName & "] ")
                 query.Append("Set ")
                 'Set Columns to update
                 For Each setValue In pSetDataValues
@@ -563,7 +564,7 @@ Public Class Database
         Return selectedData
     End Function
 
-    Public Function DeleteTableData(pDatabaseName As String, pTableName As String, pWhereValues As List(Of DatabaseParameter), pWhereAnd As Boolean) As Long Implements IRozeDatabaseCompliance.DeleteTableData
+    Public Function DeleteTableData(pDatabaseName As String, pTableSchema As String, pTableName As String, pWhereValues As List(Of DatabaseParameter), pWhereAnd As Boolean) As Long Implements IRozeDatabaseCompliance.DeleteTableData
         Dim rowCount As Long = 0
         Try
             OpenConnection()
@@ -571,6 +572,8 @@ Public Class Database
 
             Dim query As New StringBuilder
             query.Append("Delete From [")
+            query.Append(pTableSchema)
+            query.Append("].[")
             query.Append(pTableName)
             query.Append("] ")
             If pWhereValues.Count > 0 Then
@@ -597,7 +600,7 @@ Public Class Database
         Return rowCount
     End Function
 
-    Public Function InsertTableData(pDatabaseName As String, pTableName As String, pInsertValues As List(Of DatabaseParameter)) As Boolean Implements IRozeDatabaseCompliance.InsertTableData
+    Public Function InsertTableData(pDatabaseName As String, pTableSchema As String, pTableName As String, pInsertValues As List(Of DatabaseParameter)) As Boolean Implements IRozeDatabaseCompliance.InsertTableData
 
         Dim rowsInserted As Integer = 0
 
@@ -610,7 +613,7 @@ Public Class Database
                 Dim queryValues As New StringBuilder
 
                 query.AppendLine("Use " & pDatabaseName)
-                query.Append("Insert Into " & pTableName & " (")
+                query.Append("Insert Into [" & pTableSchema & "].[" & pTableName & "] (")
 
                 queryValues.Append(" Values (")
                 For Each pSetValue In pInsertValues
@@ -656,12 +659,12 @@ Public Class Database
         Return rowsInserted
     End Function
 
-    Public Function UpdateInsertTableData(pDatabaseName As String, pDataTable As DataTable) As Integer Implements IRozeDatabaseCompliance.UpdateInsertTableData
+    Public Function UpdateInsertTableData(pDatabaseName As String, pTableSchema As String, pDataTable As DataTable) As Integer Implements IRozeDatabaseCompliance.UpdateInsertTableData
         Dim rowsChanged As Integer = 0
 
         Try
 
-            Dim sqlStatement As String = "Select * from " & pDataTable.TableName & " WHERE 1=0"
+            Dim sqlStatement As String = "Select * from [" & pTableSchema & "].[" & pDataTable.TableName & "] WHERE 1=0"
 
             mSqlConnection.ChangeDatabase(pDatabaseName)
 
@@ -733,7 +736,7 @@ Public Class Database
             mSqlConnection.ChangeDatabase(pDatabaseName)
 
             'Start a transaction so we can roll back if need be
-            Using sqlTransaction As SqlTransaction = mSqlConnection.BeginTransaction("Transaction_" & pDataTable.TableName)
+            Using sqlTransaction As SqlTransaction = mSqlConnection.BeginTransaction("Transaction_" & mSimpleCleaner.GetCleanString(pDataTable.TableName, True, True, 20))
 
                 'Create the select cmd so we know the data table we are working with
                 Using sqlSelectCmd As New SqlCommand(pSelectCommand, mSqlConnection, sqlTransaction)
