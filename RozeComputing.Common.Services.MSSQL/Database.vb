@@ -1,5 +1,8 @@
+Imports System.ComponentModel
 Imports System.Data
+Imports System.Diagnostics.CodeAnalysis
 Imports System.IO
+Imports System.Security.AccessControl
 Imports System.Text
 Imports Microsoft.Data.SqlClient
 Imports RozeComputing.Common.Models
@@ -62,6 +65,7 @@ Public Class Database
     Private mSqlConnection As New Microsoft.Data.SqlClient.SqlConnection
 
     Private ReadOnly mSimpleCleaner As New SimpleCleaningService
+    Private ReadOnly mDataRowService As New DataRowService
 #End Region
 
 #Region "Properties"
@@ -105,12 +109,18 @@ Public Class Database
     ''' Takes the settings and gets the connection string from them. Creating the SQL Connection
     ''' </summary>
     ''' <param name="pConnectionSetting"></param>
-    Sub New(pConnectionSetting As SqlConnectionStringBuilder, Optional pCleaningSettings As CleaningSettings = Nothing)
+    Sub New(pConnectionSetting As SqlConnectionStringBuilder, Optional pCleaningSettings As CleaningSettings = Nothing, Optional pRowDataService As DataRowService = Nothing)
         Try
             If IsNothing(pCleaningSettings) Then
                 pCleaningSettings = New CleaningSettings()
             End If
             mSimpleCleaner = New SimpleCleaningService(pCleaningSettings)
+
+            If IsNothing(pRowDataService) Then
+                pRowDataService = New DataRowService(pCleaningSettings)
+            End If
+            mDataRowService = pRowDataService
+
             mConnectionSettings = pConnectionSetting
 
             SetSQLConnection()
@@ -123,12 +133,18 @@ Public Class Database
     ''' Takes the Connection String and adds it to the <see cref="ConnectionSettings"/> property as <see cref="SqlConnectionStringBuilder.ConnectionString"/>
     ''' </summary>
     ''' <param name="pConnectionString">A valid connection string. Invalid connection strings will be add to <see cref="Exceptions"/></param>
-    Sub New(pConnectionString As String, Optional pCleaningSettings As CleaningSettings = Nothing)
+    Sub New(pConnectionString As String, Optional pCleaningSettings As CleaningSettings = Nothing, Optional pRowDataService As DataRowService = Nothing)
         Try
             If IsNothing(pCleaningSettings) Then
                 pCleaningSettings = New CleaningSettings()
             End If
             mSimpleCleaner = New SimpleCleaningService(pCleaningSettings)
+
+            If IsNothing(pRowDataService) Then
+                pRowDataService = New DataRowService(pCleaningSettings)
+            End If
+            mDataRowService = pRowDataService
+
             ConnectionSettings.ConnectionString = pConnectionString
 
             SetSQLConnection()
@@ -269,6 +285,76 @@ Public Class Database
         Return result
     End Function
 
+    Public Function DropTableOnDatabase(pDatabaseName As String, pTableName As String) As Boolean
+        Dim result As Boolean = True
+
+        Try
+            Dim query As New StringBuilder
+            OpenConnection()
+
+            'Change the database name
+            mSqlConnection.ChangeDatabase(pDatabaseName)
+
+            Using sqlQuery As New SqlCommand()
+                sqlQuery.Connection = mSqlConnection
+
+                'Check if table exists before we try creating one. If already exists do nothing
+                Dim dt As New DataTable
+                sqlQuery.CommandText = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" & pTableName & "'"
+
+                Using adapter As New SqlDataAdapter(sqlQuery)
+                    adapter.Fill(dt)
+                End Using
+
+                If dt.Rows.Count = 0 Then
+                    'Table does not exist no need to do any more work
+                    'Throw message into exceptions to let know that we did nothing
+                    Throw New WarningException("Table Name: " & pTableName & " does not exist so can not drop it.")
+                End If
+
+                'Get the list of constraints
+                query.Append("SELECT sys.schemas.name AS SchemaName, tableNamed.name AS ObjectName, ConstraintNamed.name AS ConstraintName, ConstraintNamed.type_desc
+                                FROM            sys.objects AS tableNamed 
+                                INNER JOIN sys.objects AS ConstraintNamed ON tableNamed.object_id = ConstraintNamed.parent_object_id 
+                                INNER JOIN sys.schemas ON tableNamed.schema_id = sys.schemas.schema_id
+                                WHERE (tableNamed.name = N'" & pTableName & "') AND (ConstraintNamed.type_desc LIKE N'%CONSTRAINT')")
+                sqlQuery.CommandText = query.ToString
+                dt = New DataTable
+                Using adapter As New SqlDataAdapter(sqlQuery)
+                    adapter.Fill(dt)
+                End Using
+
+                'See if we have any constraints
+                If dt.Rows.Count > 0 Then
+                    query.Clear()
+
+                    For Each dtRow As DataRow In dt.Rows
+                        'add each constrain to the query to be dropped
+                        query.Append("Alter Table ")
+                        query.Append(mDataRowService.GetStringFromDataRow(dtRow, "SchemaName", True, True))
+                        query.Append("."c)
+                        query.Append(mDataRowService.GetStringFromDataRow(dtRow, "ObjectName", True, True))
+                        query.Append(" Drop Constraint ")
+                        query.Append(mDataRowService.GetStringFromDataRow(dtRow, "ConstraintName", True, True))
+                        query.AppendLine(";"c)
+                    Next
+                End If
+
+                'Drop the Constraints
+                sqlQuery.CommandText = query.ToString()
+                sqlQuery.ExecuteNonQuery()
+
+                'Drop the table
+                sqlQuery.CommandText = "Drop Table dbo.[" & pTableName & "]"
+                sqlQuery.ExecuteNonQuery()
+            End Using
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            result = False
+        End Try
+
+        Return result
+    End Function
     Public Function CreateTableOnDatabase(pDatabaseName As String, pTableName As String, pColumns As List(Of DataColumn)) As Boolean Implements IRozeDatabaseCompliance.CreateTableOnDatabase
 
         Dim result As Boolean = True
@@ -387,7 +473,7 @@ Public Class Database
 
                 If dt.Rows.Count <> 0 Then
                     'Table already exists do nothing
-                    Return False
+                    Throw New WarningException("Table already exists")
                 End If
 
                 'Create the table
