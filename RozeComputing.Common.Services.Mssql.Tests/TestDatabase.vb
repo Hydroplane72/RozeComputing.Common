@@ -10,6 +10,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
         Private strbuilder As SqlConnectionStringBuilder
 
         Private Const DATABASE_NAME As String = "TestingDatabase"
+        Private Const DATABASE_SCHEMA As String = "dbo"
         <SetUp>
         Public Sub Setup()
             strbuilder = New SqlConnectionStringBuilder()
@@ -43,7 +44,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 End If
 
                 'Send to database to save new row.
-                response = database.DropTableOnDatabase(DATABASE_NAME, pTableName)
+                response = database.DropTableOnDatabase(DATABASE_NAME, DATABASE_SCHEMA, pTableName)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -83,7 +84,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
 
 
                 'Send to database to save new row.
-                response = database.CreateTableOnDatabase(DATABASE_NAME, pTableName, columns)
+                response = database.CreateTableOnDatabase(DATABASE_NAME, DATABASE_SCHEMA, pTableName, columns)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while creating table.", database.Exceptions))
                 End If
@@ -124,7 +125,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 whereValues.Add(whereValue)
 
                 'Send to database to save new row.
-                response = database.UpdateTableData(DATABASE_NAME, "TestInsertStatements", setValues, whereValues, False)
+                response = database.UpdateTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", setValues, whereValues, False)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -155,7 +156,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 insertValues.Add(insertValue)
 
                 'Send to database to save new row.
-                response = database.DeleteTableData(DATABASE_NAME, "TestInsertStatements", insertValues, False)
+                response = database.DeleteTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", insertValues, False)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -181,7 +182,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 Dim insertValues As New List(Of DatabaseParameter)
 
                 'Send to database to save new row.
-                response = database.DeleteTableData(DATABASE_NAME, "TestInsertStatements", insertValues, False)
+                response = database.DeleteTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", insertValues, False)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -222,7 +223,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
 
 
                 'Send to database to save new row.
-                response = database.InsertTableData(DATABASE_NAME, "TestInsertStatements", insertValues)
+                response = database.InsertTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", insertValues)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while inserting data.", database.Exceptions))
                 End If
@@ -260,7 +261,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 dt.Rows.Item(0).Item("dateTimeTest") = DateTime.Now
 
                 'Send to database to save new row.
-                response = database.UpdateInsertTableData(DATABASE_NAME, dt)
+                response = database.UpdateInsertTableData(DATABASE_NAME, DATABASE_SCHEMA, dt)
 
 
                 If database.Exceptions.Count > 0 Then
@@ -299,7 +300,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 dt.Rows.Add(dr)
 
                 'Send to database to save new row.
-                response = database.UpdateInsertTableData(DATABASE_NAME, dt)
+                response = database.UpdateInsertTableData(DATABASE_NAME, DATABASE_SCHEMA, dt)
 
 
                 If database.Exceptions.Count > 0 Then

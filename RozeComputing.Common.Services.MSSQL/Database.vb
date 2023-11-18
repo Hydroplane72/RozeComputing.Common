@@ -395,18 +395,23 @@ Public Class Database
                         If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) <> Short.MinValue Then
                             constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanInt16(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
-                    'Commented Out because we don't ahve a GetClean Created for this yet
-                    'Case "System.Byte"
-                    '    createTableQuery.Append(" tinyint")
-                    '    'Create default Constraints when needed
-                    '    If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanInteger(DataColumn.DefaultValue) <> Integer.MinValue Then
-                    '        constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_"& DataColumn.ColumnName & "] DEFAULT (" & DataColumn.DefaultValue & ") FOR [" & DataColumn.ColumnName & "]")
-                    '    End If
+                    Case "System.Byte"
+                        createTableQuery.Append(" tinyint")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanByte(DataColumn.DefaultValue) <> Byte.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanByte(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
+                    Case "System.Short"
+                        createTableQuery.Append(" tinyint")
+                        'Create default Constraints when needed
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanShort(DataColumn.DefaultValue) <> Short.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanShort(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        End If
                     Case "System.Decimal"
                         createTableQuery.Append(" decimal ")
                         'Create default Constraints when needed
-                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) <> Double.MinValue Then
-                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDouble(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
+                        If IsNothing(DataColumn.DefaultValue) = False AndAlso mSimpleCleaner.GetCleanDecimal(DataColumn.DefaultValue) <> Decimal.MinValue Then
+                            constraintsQuery.AppendLine("ALTER TABLE [" & pTableSchema & "].[" & pTableSchema & "].[" & pTableName & "] ADD CONSTRAINT [DF_" & pTableName.Replace(" ", "") & "_" & DataColumn.ColumnName & "] DEFAULT (" & mSimpleCleaner.GetCleanDecimal(DataColumn.DefaultValue) & ") FOR [" & DataColumn.ColumnName & "]")
                         End If
                     Case "System.DateTime"
                         createTableQuery.Append(" datetime ")
@@ -507,7 +512,7 @@ Public Class Database
                 Dim query As New StringBuilder
 
 
-                query.AppendLine("Update [" & pTableSchema & "][" & pTableName & "] ")
+                query.AppendLine("Update [" & pTableSchema & "].[" & pTableName & "] ")
                 query.Append("Set ")
                 'Set Columns to update
                 For Each setValue In pSetDataValues
