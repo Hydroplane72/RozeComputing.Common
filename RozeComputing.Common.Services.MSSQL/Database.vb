@@ -14,12 +14,12 @@ Imports RozeComputing.Common.Models.Database
 ''' <list type="bullet">
 '''     <item>Attaching databases to the server</item>
 '''     <item>Adding tables to a database</item>
+'''     <item>Drop tables from a database</item>        
 '''     <item>Updating tables in a database</item>
 '''     <item>Selecting from tables in a database</item>
 '''     <item>Deleting from tables in a database</item>
 '''     <item>Insert into tables in a database</item>     
-'''     <item>Select from views in a database</item>     
-'''     <item>Execute stored procedures in a database</item>     
+'''     <item>Select from in a database</item>  
 ''' </list>
 ''' </summary>
 Public Class Database

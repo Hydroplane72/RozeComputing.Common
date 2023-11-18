@@ -28,7 +28,6 @@ Namespace Database
         ''' <param name="pDatabaseName">Name of the database</param>
         ''' <param name="pTableSchema">The schema the table is a part of. This is most common in MSSQL Databases</param>
         ''' <param name="pTableName">Name of the table to create</param>
-        ''' <param name="pColumns">structure of the table to create</param>
         ''' <returns>if the operation was successful</returns>
         Function DropTableOnDatabase(pDatabaseName As String, pTableSchema As String, pTableName As String) As Boolean
 

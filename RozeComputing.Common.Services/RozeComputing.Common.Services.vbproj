@@ -8,7 +8,7 @@
     <Description>Provides functionality to always return a valid value. By using these services you will no longer need worry about null values. 
 Just send the data through the functions and get returned the value cleaned or the default value if the value provided is invalid.</Description>
     <PackageTags>cleaner</PackageTags>
-    <PackageReleaseNotes>No changes</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated to clean Short, Decimal and Byte data types.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
     <PackAsTool>False</PackAsTool>
