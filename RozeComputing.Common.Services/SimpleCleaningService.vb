@@ -268,6 +268,79 @@ Public Class SimpleCleaningService
     End Function
 
     ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Decimal"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Decimal"/></param>
+    ''' <returns>A clean valid <see cref="Decimal"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanDecimal(pValue As Object) As Decimal
+        Dim rtnValue As Decimal = 0
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = Decimal.MaxValue
+                    rtnValue = GetCleanDecimal(pValue, Decimal.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = 0
+                    rtnValue = GetCleanDecimal(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = Decimal.MinValue
+                    rtnValue = GetCleanDecimal(pValue, Decimal.MinValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetCleanDecimal(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Decimal"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Decimal"/></param>
+    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Decimal"/>.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="Decimal"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanDecimal(pValue As Object, Optional pDefaultValue As Decimal = Decimal.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Decimal
+        Dim rtnValue As Decimal = 0
+
+        Try
+            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
+
+
+            'Try converting to Decimal
+            If String.IsNullOrWhiteSpace(pValueCleaned) Then
+                rtnValue = pDefaultValue
+            Else
+                If Decimal.TryParse(pValueCleaned, rtnValue) = False Then
+                    rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
+                End If
+            End If
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+    
+    ''' <summary>
     ''' Takes the Value and tries to convert it to an <see cref="Long"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
@@ -413,11 +486,155 @@ Public Class SimpleCleaningService
     End Function
 
     ''' <summary>
-    ''' Takes the Value and tries to convert it to an <see cref="Int16"/><br />
+    ''' Takes the Value and tries to convert it to an <see cref="Byte"/><br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
-    ''' <param name="pValue">The Value to convert to a <see cref="Int16"/></param>
-    ''' <returns>A clean valid <see cref="Int16"/> that can be used without fear of nulls</returns>
+    ''' <param name="pValue">The Value to convert to a <see cref="Byte"/></param>
+    ''' <returns>A clean valid <see cref="Byte"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanByte(pValue As Object) As Byte
+        Dim rtnValue As Byte = 0
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = Byte.MaxValue
+                    rtnValue = GetCleanByte(pValue, Byte.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = 0
+                    rtnValue = GetCleanByte(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = Byte.MinValue
+                    rtnValue = GetCleanByte(pValue, Byte.MinValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetCleanByte(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Byte"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Byte"/></param>
+    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Byte"/>.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="Byte"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanByte(pValue As Object, Optional pDefaultValue As Byte = Byte.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Byte
+        Dim rtnValue As Byte = 0
+
+        Try
+            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
+
+            'Try converting to Byte
+            If String.IsNullOrWhiteSpace(pValueCleaned) Then
+                rtnValue = pDefaultValue
+            Else
+                If Byte.TryParse(pValueCleaned, rtnValue) = False Then
+                    rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
+                End If
+            End If
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Short"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Short"/></param>
+    ''' <returns>A clean valid <see cref="Short"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanShort(pValue As Object) As Short
+        Dim rtnValue As Short = 0
+
+        Try
+            Select Case mCleaningSettings.DefaultValue
+                Case CleaningSettings.DefaultValueEnum.UseMaxVal
+                    rtnValue = Short.MaxValue
+                    rtnValue = GetCleanShort(pValue, Short.MaxValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal
+                    rtnValue = 0
+                    rtnValue = GetCleanShort(pValue, 0, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseMinVal
+                    rtnValue = Short.MinValue
+                    rtnValue = GetCleanShort(pValue, Short.MinValue, mCleaningSettings.AllowExceptionRollUp)
+
+                Case CleaningSettings.DefaultValueEnum.UseNullVal
+                    rtnValue = Nothing
+                    rtnValue = GetCleanShort(pValue, Nothing, mCleaningSettings.AllowExceptionRollUp)
+
+            End Select
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If mCleaningSettings.AllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Short"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Short"/></param>
+    ''' <param name="pDefaultValue">Default Value to return if <paramref name="pValue"/> is invalid. <br /> WARNING: Will convert nulls to MinValue of <see cref="Short"/>.</param>
+    ''' <param name="pAllowExceptionRollUp">If = true Will allow errors to propagate through.<br />If = false will catch any errors.</param>
+    ''' <returns>A clean valid <see cref="Short"/> that can be used without fear of nulls</returns>
+    Public Function GetCleanShort(pValue As Object, Optional pDefaultValue As Short = Short.MinValue, Optional pAllowExceptionRollUp As Boolean = False) As Short
+        Dim rtnValue As Short = 0
+
+        Try
+            Dim pValueCleaned = GetCleanString(pValue, pDefaultValue, True, True,, pAllowExceptionRollUp)
+
+            'Try converting to Short
+            If String.IsNullOrWhiteSpace(pValueCleaned) Then
+                rtnValue = pDefaultValue
+            Else
+                If Short.TryParse(pValueCleaned, rtnValue) = False Then
+                    rtnValue = pDefaultValue
+                    Throw New ArgumentException("Parameter " & NameOf(pValue) & " is not parse able with value: " & pValue & vbCrLf & "Returning default value (" & pDefaultValue & ")")
+                End If
+            End If
+
+        Catch ex As Exception
+            Exceptions.Add(ex)
+            If pAllowExceptionRollUp = True Then
+                Throw
+            End If
+        End Try
+
+        Return rtnValue
+    End Function
+
+    ''' <summary>
+    ''' Takes the Value and tries to convert it to an <see cref="Int32"/><br />
+    ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
+    ''' </summary>
+    ''' <param name="pValue">The Value to convert to a <see cref="Int32"/></param>
+    ''' <returns>A clean valid <see cref="Int32"/> that can be used without fear of nulls</returns>
     Public Function GetCleanInt32(pValue As Object) As Int32
         Dim rtnValue As Int32 = 0
 
@@ -559,7 +776,7 @@ Public Class SimpleCleaningService
     ''' <summary>
     ''' Takes the Value and tries to convert it to a <see cref="Guid"/><br />
     ''' The following <see cref="CleaningSettings.DefaultValueEnum"/> values default to <see cref="Guid.Empty"/><br />
-    ''' (<see cref="CleaningSettings.DefaultValueEnum.UseMaxVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseMinVal"/>)
+    ''' (<see cref="CleaningSettings.DefaultValueEnum.UseMaxVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseZeroOrEmptyVal"/>, <see cref="CleaningSettings.DefaultValueEnum.UseMinVal"/>) <br />
     ''' Any errors hit will always be added to the Exceptions List to be viewed after returning the value
     ''' </summary>
     ''' <param name="pValue">The Value to convert to a <see cref="Guid"/></param>
