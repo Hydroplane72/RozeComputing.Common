@@ -18,6 +18,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
             strbuilder.IntegratedSecurity = True
             strbuilder.Pooling = True
             strbuilder.TrustServerCertificate = True
+            strbuilder.Add("database", DATABASE_NAME)
         End Sub
 
 
@@ -37,14 +38,16 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
 
+                database.DatabaseName = DATABASE_NAME
+
                 'Make sure table exists
-                Dim dt As DataTable = database.SelectTableData(DATABASE_NAME, "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" & pTableName & "'")
+                Dim dt As DataTable = database.SelectTableData("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" & pTableName & "'")
                 If dt.Rows.Count = 0 Then
                     CreateTable(pTableName)
                 End If
 
                 'Send to database to save new row.
-                response = database.DropTableOnDatabase(DATABASE_NAME, DATABASE_SCHEMA, pTableName)
+                response = database.DropTableOnDatabase(pTableName)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -69,8 +72,10 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
 
+                database.DatabaseName = DATABASE_NAME
+
                 'If table exists drop it
-                Dim dt As DataTable = database.SelectTableData(DATABASE_NAME, "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" & pTableName & "'")
+                Dim dt As DataTable = database.SelectTableData("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '" & pTableName & "'")
                 If dt.Rows.Count <> 0 Then
                     DropTable(pTableName)
                 End If
@@ -84,7 +89,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
 
 
                 'Send to database to save new row.
-                response = database.CreateTableOnDatabase(DATABASE_NAME, DATABASE_SCHEMA, pTableName, columns)
+                response = database.CreateTableOnDatabase(pTableName, columns)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while creating table.", database.Exceptions))
                 End If
@@ -102,6 +107,8 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
+
+                database.DatabaseName = DATABASE_NAME
 
                 'Delete Data to make sure we don't have conflicts with past tests
                 DeleteTableData_AllRows()
@@ -125,7 +132,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 whereValues.Add(whereValue)
 
                 'Send to database to save new row.
-                response = database.UpdateTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", setValues, whereValues, False)
+                response = database.UpdateTableData("TestInsertStatements", setValues, whereValues, False)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -146,6 +153,8 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
 
+                database.DatabaseName = DATABASE_NAME
+
                 'Make sure there is data in table
                 InsertTableData()
                 InsertTableData("DeleteThis")
@@ -156,7 +165,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 insertValues.Add(insertValue)
 
                 'Send to database to save new row.
-                response = database.DeleteTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", insertValues, False)
+                response = database.DeleteTableData("TestInsertStatements", insertValues, False)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -176,13 +185,15 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
 
+                database.DatabaseName = DATABASE_NAME
+
                 'Make sure there is data in table
                 InsertTableData()
 
                 Dim insertValues As New List(Of DatabaseParameter)
 
                 'Send to database to save new row.
-                response = database.DeleteTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", insertValues, False)
+                response = database.DeleteTableData("TestInsertStatements", insertValues, False)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while deleting data.", database.Exceptions))
                 End If
@@ -206,6 +217,8 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
 
+                database.DatabaseName = DATABASE_NAME
+
                 Dim insertValues As New List(Of DatabaseParameter)
 
                 Dim insertValue As New DatabaseParameter("name", pNameValue)
@@ -223,7 +236,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
 
 
                 'Send to database to save new row.
-                response = database.InsertTableData(DATABASE_NAME, DATABASE_SCHEMA, "TestInsertStatements", insertValues)
+                response = database.InsertTableData("TestInsertStatements", insertValues)
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while inserting data.", database.Exceptions))
                 End If
@@ -242,8 +255,11 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
+
+                database.DatabaseName = DATABASE_NAME
+
                 'Get the table data
-                dt = database.SelectTableData(DATABASE_NAME, "Select * From [TestInsertStatements] where 1=1")
+                dt = database.SelectTableData("Select * From [TestInsertStatements] where 1=1")
 
                 'Set the name of the table to update
                 dt.TableName = "TestInsertStatements"
@@ -253,7 +269,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                     InsertTableData()
 
                     'Data should now exist
-                    dt = database.SelectTableData(DATABASE_NAME, "Select * From [TestInsertStatements] where 1=1")
+                    dt = database.SelectTableData("Select * From [TestInsertStatements] where 1=1")
                 End If
 
                 'Rows exist ... Change the first one
@@ -261,7 +277,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 dt.Rows.Item(0).Item("dateTimeTest") = DateTime.Now
 
                 'Send to database to save new row.
-                response = database.UpdateInsertTableData(DATABASE_NAME, DATABASE_SCHEMA, dt)
+                response = database.UpdateInsertTableData(dt)
 
 
                 If database.Exceptions.Count > 0 Then
@@ -281,8 +297,11 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
+
+                database.DatabaseName = DATABASE_NAME
+
                 'Get the table structure
-                dt = database.SelectTableData(DATABASE_NAME, "Select * From [TestInsertStatements] where 1=0")
+                dt = database.SelectTableData("Select * From [TestInsertStatements] where 1=0")
 
                 'Set the name of the table to update
                 dt.TableName = "TestInsertStatements"
@@ -300,7 +319,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 dt.Rows.Add(dr)
 
                 'Send to database to save new row.
-                response = database.UpdateInsertTableData(DATABASE_NAME, DATABASE_SCHEMA, dt)
+                response = database.UpdateInsertTableData(dt)
 
 
                 If database.Exceptions.Count > 0 Then
@@ -321,7 +340,10 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
                 End If
-                dt = database.SelectTableData(DATABASE_NAME, "Select * From [TestSelectStatements]")
+
+                database.DatabaseName = DATABASE_NAME
+
+                dt = database.SelectTableData("Select * From [TestSelectStatements]")
                 If database.Exceptions.Count > 0 Then
                     Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while querying for data.", database.Exceptions))
                 End If
