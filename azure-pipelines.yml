@@ -17,7 +17,16 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
+
+
 steps:
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'Free Trial (a61dc725-1165-443c-829c-35df82c38f9e)'
+    KeyVaultName: 'RozeComputingVault'
+    SecretsFilter: '*'
+    RunAsPreJob: true
+    
 - task: NuGetToolInstaller@1
   inputs:
     versionSpec: 
