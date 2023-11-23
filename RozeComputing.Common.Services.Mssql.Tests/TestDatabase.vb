@@ -353,6 +353,31 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
                 Assert.Fail(GetAssertionExceptionMessage("No data returned from select."))
             End If
         End Sub
+        <Test>
+        Public Sub SelectTableDataUsingSQLParameters()
+            Dim dt As New DataTable
+
+            Using database As New Database(strbuilder)
+                If database.Exceptions.Count > 0 Then
+                    Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while constructing.", database.Exceptions))
+                End If
+
+                database.DatabaseName = DATABASE_NAME
+                Dim parameters As New List(Of SqlParameter) From {
+                    database.GetNewSQLParameter("@ParameterName", 1),
+                    database.GetNewSQLParameter("@StringParameterName", "1")
+                }
+
+                dt = database.SelectTableData("Select * From [TestSelectStatements] Where 1 = @ParameterName AND '1' = @StringParameterName", parameters)
+                If database.Exceptions.Count > 0 Then
+                    Assert.Fail(GetAssertionExceptionMessage("Exceptions hit while querying for data.", database.Exceptions))
+                End If
+            End Using
+
+            If dt.Rows.Count = 0 Then
+                Assert.Fail(GetAssertionExceptionMessage("No data returned from select."))
+            End If
+        End Sub
 
         Private Function GetAssertionExceptionMessage(pBeginningMessage As String, Optional pExceptions As List(Of Exception) = Nothing)
             Dim strBuilder As New StringBuilder

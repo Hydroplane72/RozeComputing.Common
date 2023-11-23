@@ -822,5 +822,44 @@ Public Class Database
 
         Return rowsChanged
     End Function
+
+    ''' <summary>
+    ''' Selects data from the table in the database using sql parameters.
+    ''' <br />
+    ''' This is specific for MSSQL.
+    ''' </summary>
+    ''' <param name="pSQLStatement">The Sql statement to get data from database</param>
+    ''' <param name="pParameters">Parameters need to be distinguishable within the sql statement. Normally putting @ in front of the parameter name is a good idea.</param>
+    ''' <returns></returns>
+    Public Function SelectTableData(pSQLStatement As String, pParameters As List(Of SqlParameter)) As DataTable
+        Dim returnTable As New DataTable
+
+        Try
+            OpenConnection()
+            mSqlConnection.ChangeDatabase(DatabaseName)
+
+            Using sqlCmd As New SqlCommand(pSQLStatement, mSqlConnection)
+
+                sqlCmd.Parameters.AddRange(pParameters.ToArray)
+                Using adapter As New SqlDataAdapter(sqlCmd)
+                    adapter.Fill(returnTable)
+                End Using
+            End Using
+        Catch ex As Exception
+            Exceptions.Add(ex)
+        End Try
+
+        Return returnTable
+    End Function
+
+    ''' <summary>
+    ''' Simply pass in the parameters and get a sqlParameter object back
+    ''' </summary>
+    ''' <param name="pParameterName">Normally the corresponding ColumnName. The Name needs to be distinguishable within the sql statement</param>
+    ''' <param name="pParameterValue">The value to look up by. If this is a numeric object and in the database it is a string you will want call <see cref="ToString()"/> while passing in here.</param>
+    ''' <returns>SQLParameter to be able to pass into <see cref="SelectTableData(String, List(Of SqlParameter))"/></returns>
+    Public Function GetNewSQLParameter(pParameterName As String, pParameterValue As Object) As SqlParameter
+        Return New SqlParameter(pParameterName, pParameterValue)
+    End Function
 #End Region
 End Class
