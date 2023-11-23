@@ -8,9 +8,7 @@
     <Authors>Roze Computing, Matthew Rozendaal</Authors>
     <Description>Models used by and shared by Roze Computing Services</Description>
     <PackageTags>models</PackageTags>
-    <PackageReleaseNotes>Updated Database.DatabaseParameter to not contain unneeded information
-Updated IRozeDatabaseCompliance with Drop Table function
-Updated IRozeDatabaseCompliance to allow the passage of Schemas for a datatable.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed some logic errors</PackageReleaseNotes>
     <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
