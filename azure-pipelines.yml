@@ -19,6 +19,9 @@ variables:
 
 steps:
 - task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: 
+    checkLatest: true
 
 - task: NuGetCommand@2
   inputs:
@@ -30,8 +33,20 @@ steps:
     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+    msbuildArchitecture: 'x64'
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+#Uncomment this to run unit tests -NEED TO set up external mssql connections for test database before doing this
+#- task: VSTest@2
+#  inputs:
+#    platform: '$(buildPlatform)'
+#    configuration: '$(buildConfiguration)'
+
+#Uncomment this to Start pushing to Artifacts feed -NEED TO make sure nupkg values contain correct versioning.
+#- task: NuGetCommand@2
+#  inputs:
+#    command: 'push'
+#    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+#    nuGetFeedType: 'internal'
+#    publishVstsFeed: '5f9dcefa-b54d-4051-92d0-b46d87bb0162/6fa778e5-f11a-4284-a3a6-2b011fb88e10'
+
+
