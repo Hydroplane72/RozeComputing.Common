@@ -10,7 +10,7 @@ Namespace RozeComputing.Common.Services.Mssql.Tests
         Private strbuilder As SqlConnectionStringBuilder
 
         Private Const DATABASE_NAME As String = "TestingDatabase"
-        Private Const DATABASE_SCHEMA As String = "dbo"
+        Private Const DATABASE_SCHEMA As String = "Testing"
         <SetUp>
         Public Sub Setup()
             strbuilder = New SqlConnectionStringBuilder()
