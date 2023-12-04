@@ -3,16 +3,18 @@
   <PropertyGroup>
     <RootNamespace>RozeComputing.Common.Services</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>Rose Computing Common Cleaners</Title>
+    <Title>Rose Computing Common Services</Title>
     <Authors>Roze Computing, Matthew Rozendaal</Authors>
     <Description>Provides functionality to always return a valid value. By using these services you will no longer need worry about null values. 
 Just send the data through the functions and get returned the value cleaned or the default value if the value provided is invalid.</Description>
     <PackageTags>cleaner</PackageTags>
     <PackageReleaseNotes>Fixed some logic errors</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
-    <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
+    <PackageOutputPath>..\</PackageOutputPath>
     <PackAsTool>False</PackAsTool>
     <TargetFramework>net6.0</TargetFramework>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,11 +26,11 @@ Just send the data through the functions and get returned the value cleaned or t
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE.txt">
+    <None Include="..\docs\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="..\README.md">
+    <None Include="..\LICENSE.txt">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
@@ -36,6 +38,13 @@ Just send the data through the functions and get returned the value cleaned or t
 
   <ItemGroup>
     <ProjectReference Include="..\RozeComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="..\docs\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

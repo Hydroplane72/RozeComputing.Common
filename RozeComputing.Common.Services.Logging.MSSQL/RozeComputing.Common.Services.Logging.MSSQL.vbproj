@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>RozeComputing.Common.Services.Logging.MSSQL</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="5.2.7" />
+    <PackageReference Include="NLog.Database" Version="5.2.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RozeComputing.Common.Services.Logging\RozeComputing.Common.Services.Logging.vbproj" />
+  </ItemGroup>
+
+</Project>

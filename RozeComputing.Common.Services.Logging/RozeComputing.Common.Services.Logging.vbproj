@@ -1,16 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>RozeComputing.Common.Services.MSSQL</RootNamespace>
+    <RootNamespace>RozeComputing.Common.Services.Logging</RootNamespace>
     <TargetFramework>net6.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>Roze Computing Common Services MSSQL</Title>
-    <Description>Provides functionality to be able to connect to mssql in an easy manner.</Description>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>mssql; service</PackageTags>
-    <PackageReleaseNotes>Added Select from tables using SQL Parameters</PackageReleaseNotes>
-    <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
+    <Title>Rose Computing Common Logging</Title>
+    <PackageTags>Common, Service, Logging, Easy, Simple</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,12 +22,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.2" />
+    <PackageReference Include="NLog" Version="5.2.7" />
+    <PackageReference Include="NLog.Database" Version="5.2.7" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RozeComputing.Common.Models\RozeComputing.Common.Models.vbproj" />
-    <ProjectReference Include="..\RozeComputing.Common.Services\RozeComputing.Common.Services.vbproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Generator></Generator>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

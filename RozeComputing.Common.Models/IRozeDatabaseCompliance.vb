@@ -25,7 +25,7 @@ Namespace Database
         Function AttachOrCreateDatabaseOnServer(pDatabaseFile As String) As Boolean
 
         ''' <summary>
-        ''' Drops the table on the database using the column list passed in. Please be sure your <paramref name="pTableName"/> and <paramref name="pColumns"/> information is sql injection safe. 
+        ''' Drops the table on the database using the column list passed in. Please be sure your <paramref name="pTableName"/> information is sql injection safe. 
         ''' This does not attempt to look for that.<br />
         ''' If table does not exist then does not try to drop
         ''' </summary>
