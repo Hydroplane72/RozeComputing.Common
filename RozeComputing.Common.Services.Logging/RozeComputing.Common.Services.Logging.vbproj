@@ -8,12 +8,7 @@
     <PackageTags>Common, Service, Logging, Easy, Simple</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Added a new nuget package named "RozeComputing.Common.Services.Logging".
-This is primarily to be used for easy logging.
-Also updated so all projects look at the readme within docs.
-This will make it easier so the project doc readme is the same as these projects.
-Later I will probably split the projects to have their own read me's.
-Don't think it is worth it at this time.</PackageReleaseNotes>
+    <PackageReleaseNotes>Testing cmd release for new package</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
