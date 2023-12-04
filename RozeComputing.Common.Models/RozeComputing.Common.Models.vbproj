@@ -8,21 +8,20 @@
     <Authors>Roze Computing, Matthew Rozendaal</Authors>
     <Description>Models used by and shared by Roze Computing Services</Description>
     <PackageTags>models</PackageTags>
-    <PackageReleaseNotes>Fixed some logic errors</PackageReleaseNotes>
-    <PackageOutputPath>D:\Programming\RozeComputing.Common.Cleaner</PackageOutputPath>
+    <PackageReleaseNotes>Generic Release</PackageReleaseNotes>
+    <PackageOutputPath>..\</PackageOutputPath>
     <NeutralLanguage>en</NeutralLanguage>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE.txt">
+    <None Include="..\docs\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <None Include="..\LICENSE.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +38,13 @@
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
