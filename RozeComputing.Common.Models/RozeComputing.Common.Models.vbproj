@@ -8,7 +8,7 @@
     <Authors>Roze Computing, Matthew Rozendaal</Authors>
     <Description>Models used by and shared by Roze Computing Services</Description>
     <PackageTags>models</PackageTags>
-    <PackageReleaseNotes>Fixed some logic errors</PackageReleaseNotes>
+    <PackageReleaseNotes>Generic Release</PackageReleaseNotes>
     <PackageOutputPath>..\</PackageOutputPath>
     <NeutralLanguage>en</NeutralLanguage>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>

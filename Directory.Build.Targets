@@ -9,13 +9,6 @@
         <InformationalVersion>This is a prerelease package</InformationalVersion>
         <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
         <RepositoryType>git</RepositoryType>
-        <ReleaseNotes>
-        Added a new nuget package named "RozeComputing.Common.Services.Logging". 
-        This is primarily to be used for easy logging.
-        Also updated so all projects look at the readme within docs. 
-        This will make it easier so the project doc readme is the same as these projects. 
-        Later I will probably split the projects to have their own read me's. 
-        Don't think it is worth it at this time.</ReleaseNotes>
         <PackageOutputPath>..\</PackageOutputPath>
     </PropertyGroup>
   </Project>
