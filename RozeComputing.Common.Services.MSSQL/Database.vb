@@ -226,7 +226,8 @@ Public Class Database
                 query.Append(" "c)
                 query.Append("[")
                 query.Append(whereValue.ColumnName)
-                query.Append("] = ")
+                query.Append("]  ")
+                query.Append(whereValue.ComparisonOperator)
 
                 'Set for Parameters
                 query.Append(" @" & whereValue.ColumnName.Replace(" ", "") & " ")
@@ -549,7 +550,8 @@ Public Class Database
                 For Each setValue In pSetDataValues
                     query.Append("["c)
                     query.Append(setValue.ColumnName)
-                    query.Append("] = ")
+                    query.Append("] ")
+                    query.Append(setValue.ComparisonOperator)
 
                     query.Append(" @Sets")
                     query.Append(setValue.ColumnName.Replace(" ", ""))

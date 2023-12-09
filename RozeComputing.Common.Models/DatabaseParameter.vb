@@ -5,9 +5,10 @@
         ''' </summary>
         ''' <param name="pColumnName"><see cref="ColumnName"/></param>
         ''' <param name="pValue"><see cref="Value"/></param>
-        Public Sub New(pColumnName As String, pValue As Object)
+        Public Sub New(pColumnName As String, pValue As Object, Optional pComparisonOperator As String = "=")
             ColumnName = pColumnName
             Value = pValue
+            ComparisonOperator = pComparisonOperator
         End Sub
 
         'Enum ParameterDataType
@@ -35,5 +36,10 @@
         ''' <returns></returns>
         Public Property Value As Object = New Object
 
+        ''' <summary>
+        ''' Allows for different comparisons between ColumnName and value.<br />
+        ''' </summary>
+        ''' <returns>Defaults to "="</returns>
+        Public Property ComparisonOperator As String = "="
     End Class
 End Namespace
